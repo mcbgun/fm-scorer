@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+{% block title %}FM24 Scorer - Sell Recommendations{% endblock %}
+{% block nav_sell %}text-warning fw-bold{% endblock %}
+
+{% block head %}
+    <style>
+        .rec-sell    { color: #dc3545; font-weight: bold; }
+        .rec-loan    { color: #fd7e14; font-weight: bold; }
+        .rec-promote { color: #198754; font-weight: bold; }
+        .rec-keep    { color: #0d6efd; font-weight: bold; }
+        .rec-monitor { color: #6c757d; font-weight: bold; }
+        .priority-bar { width: 60px; height: 8px; background: #e9ecef; border-radius: 4px; display: inline-block; overflow: hidden; vertical-align: middle; }
+        .priority-fill { height: 100%; background: #dc3545; }
+    </style>
+{% endblock %}
+
+{% block content %}
+        <h1 class="mb-3">Sell Recommendations</h1>
+        <p class="text-muted">Uses your saved squad and registration files. Evaluates your entire squad against your formation. Identifies who to sell, loan, promote, or keep based on depth chart position, age, potential, and transfer value.</p>
+
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong> {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        {% if has_saved_files %}
+        <div class="alert alert-info" role="alert">
+            <strong>Saved squad found</strong> &mdash; you can run recommendations from your last uploaded squad without re-uploading.
+        </div>
+        {% endif %}
+
+        <form action="/sell" method="post" enctype="multipart/form-data" id="sellForm">
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="card mb-3">
+                        <div class="card-header"><h5 class="mb-0">1. Squad Files</h5></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="squad_file" class="form-label">Full Squad HTML (all players)</label>
+                                <input class="form-control" type="file" id="squad_file" name="squad_file" accept=".html,.htm" {% if not has_saved_files %}required{% endif %}>
+                                {% if has_saved_files %}<div class="form-text">Optional &mdash; leave blank to use saved squad.</div>{% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="registration_file" class="form-label">Registration View HTML (optional)</label>
+                                <input class="form-control" type="file" id="registration_file" name="registration_file" accept=".html,.htm">
+                                <div class="form-text">FM squad registration view showing U21/HGN icons in the Inf column. Used for accurate squad registration rules. If not provided, U21 is estimated from date of birth.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header"><h5 class="mb-0">2. Weighting Profile</h5></div>
+                        <div class="card-body">
+                            {% for pid, profile in profiles.items() %}
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="profile_id" id="profile_{{ pid }}" value="{{ pid }}" {% if (saved and pid == saved.profile_id) or (not saved and pid == 'default') %}checked{% endif %}>
+                                <label class="form-check-label" for="profile_{{ pid }}">
+                                    <strong>{{ profile.name }}</strong>
+                                    <br><small class="text-muted">{{ profile.description }}</small>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header"><h5 class="mb-0">3. Settings</h5></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="max_youth_age" class="form-label">Youth age cutoff</label>
+                                <input type="number" class="form-control" id="max_youth_age" name="max_youth_age" value="{{ max_youth_age if max_youth_age else (saved.max_age if saved and saved.max_age else 21) }}" min="15" max="25">
+                                <div class="form-text">Players at or below this age are classified as youth and don't count against the squad limit.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="squad_size_limit" class="form-label">Squad size limit</label>
+                                <input type="number" class="form-control" id="squad_size_limit" name="squad_size_limit" value="{{ squad_size_limit if squad_size_limit else 25 }}" min="11" max="40">
+                                <div class="form-text">FM default is 25 registered players. Seniors outside this number are flagged to sell.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if formation_slots and formation_slots|length > 0 %}
+                    <div class="card mb-3">
+                        <div class="card-header"><h5 class="mb-0">Formation</h5></div>
+                        <div class="card-body">
+                            <div class="small">
+                                {% for slot in formation_slots %}
+                                <span class="badge bg-secondary me-1 mb-1">{{ slot.pos }} &rarr; {{ roles[slot.role].name if slot.role in roles else slot.role }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="form-text mt-2"><a href="/squad">Change formation &rarr;</a></div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning small">
+                        No formation saved. <a href="/squad">Set one up first</a>.
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary w-100" {% if not formation_slots or formation_slots|length == 0 %}disabled{% endif %}>Generate Recommendations</button>
+                </div>
+
+                <div class="col-md-9">
+                    {% if table_html %}
+                    <div class="row g-3 mb-3">
+                        {% if rec_counts.get("Sell", 0) > 0 %}
+                        <div class="col">
+                            <div class="card text-center border-danger">
+                                <div class="card-body py-2">
+                                    <h3 class="text-danger mb-0">{{ rec_counts.get("Sell", 0) }}</h3>
+                                    <small class="text-muted">Sell</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if rec_counts.get("Loan", 0) > 0 %}
+                        <div class="col">
+                            <div class="card text-center border-warning">
+                                <div class="card-body py-2">
+                                    <h3 class="text-warning mb-0">{{ rec_counts.get("Loan", 0) }}</h3>
+                                    <small class="text-muted">Loan</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if rec_counts.get("Promote", 0) > 0 %}
+                        <div class="col">
+                            <div class="card text-center border-success">
+                                <div class="card-body py-2">
+                                    <h3 class="text-success mb-0">{{ rec_counts.get("Promote", 0) }}</h3>
+                                    <small class="text-muted">Promote</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if rec_counts.get("Keep — Key", 0) > 0 %}
+                        <div class="col">
+                            <div class="card text-center border-primary">
+                                <div class="card-body py-2">
+                                    <h3 class="text-primary mb-0">{{ rec_counts.get("Keep — Key", 0) }}</h3>
+                                    <small class="text-muted">Keep — Key</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if rec_counts.get("Keep — Backup", 0) > 0 %}
+                        <div class="col">
+                            <div class="card text-center">
+                                <div class="card-body py-2">
+                                    <h3 class="mb-0">{{ rec_counts.get("Keep — Backup", 0) }}</h3>
+                                    <small class="text-muted">Keep — Backup</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if rec_counts.get("Keep — Prospect", 0) > 0 %}
+                        <div class="col">
+                            <div class="card text-center">
+                                <div class="card-body py-2">
+                                    <h3 class="mb-0">{{ rec_counts.get("Keep — Prospect", 0) }}</h3>
+                                    <small class="text-muted">Keep — Prospect</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="col">
+                            <div class="card text-center">
+                                <div class="card-body py-2">
+                                    <h3 class="mb-0">{{ num_players }}</h3>
+                                    <small class="text-muted">Total</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success">
+                        <strong>Profile:</strong> {{ profile_name }}<br>
+                        <small>{{ profile_desc }}</small><br>
+                        <strong>Squad size:</strong> {{ num_players }} players &nbsp; | &nbsp;
+                        <strong>Youth cutoff:</strong> age &le; {{ max_youth_age }} &nbsp; | &nbsp;
+                        <strong>Squad limit:</strong> {{ squad_size_limit }} seniors<br>
+                        {% if formation_role_names and formation_role_names|length > 0 %}
+                        <strong>Formation roles:</strong>
+                        {% for rname in formation_role_names %}
+                        <span class="badge bg-primary me-1">{{ rname }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    {% if registration %}
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Squad Registration Optimizer (Premier Division Rules)</h5>
+                            <div>
+                                {% if reg_merged %}
+                                <span class="badge bg-info">Inf column merged</span>
+                                {% endif %}
+                                {% if registration.constraints_met %}
+                                <span class="badge bg-success">All constraints met</span>
+                                {% else %}
+                                <span class="badge bg-danger">Constraints not met</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3 mb-3">
+                                <div class="col-auto text-center">
+                                    <div class="border rounded p-2 {% if registration.registered|length <= registration.max_squad %}border-success{% else %}border-danger{% endif %}">
+                                        <h4 class="mb-0">{{ registration.registered|length }}</h4>
+                                        <small class="text-muted">Registered<br>(max {{ registration.max_squad }})</small>
+                                    </div>
+                                </div>
+                                <div class="col-auto text-center">
+                                    <div class="border rounded p-2 {% if registration.hgn_count >= registration.min_hgn %}border-success{% else %}border-danger{% endif %}">
+                                        <h4 class="mb-0">{{ registration.hgn_count }}</h4>
+                                        <small class="text-muted">HGN<br>(min {{ registration.min_hgn }})</small>
+                                    </div>
+                                </div>
+                                <div class="col-auto text-center">
+                                    <div class="border rounded p-2">
+                                        <h4 class="mb-0">{{ registration.non_hgn_count }}</h4>
+                                        <small class="text-muted">Non-HGN<br>(max {{ registration.max_squad - registration.min_hgn }})</small>
+                                    </div>
+                                </div>
+                                <div class="col-auto text-center">
+                                    <div class="border rounded p-2">
+                                        <h4 class="mb-0">{{ registration.u21_exempt|length }}</h4>
+                                        <small class="text-muted">U21 Exempt<br>(age &le; {{ registration.u21_age }})</small>
+                                    </div>
+                                </div>
+                                <div class="col-auto text-center">
+                                    <div class="border rounded p-2">
+                                        <h4 class="mb-0">{{ registration.unregistered|length }}</h4>
+                                        <small class="text-muted">Unregistered<br>(sell/loan)</small>
+                                    </div>
+                                </div>
+                                <div class="col-auto text-center">
+                                    <div class="border rounded p-2">
+                                        <h4 class="mb-0">{{ registration.total_quality }}</h4>
+                                        <small class="text-muted">Total Quality<br>(sum of scores)</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if registration.issues %}
+                            <div class="alert alert-danger">
+                                <strong>Issues:</strong>
+                                <ul class="mb-0">
+                                {% for issue in registration.issues %}
+                                    <li>{{ issue }}</li>
+                                {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Registered Squad ({{ registration.registered|length }})</h6>
+                                    <table class="table table-sm table-bordered">
+                                        <thead>
+                                            <tr><th>Name</th><th>Age</th><th>Role</th><th>Score</th><th>HGN</th></tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for p in registration.registered %}
+                                            <tr>
+                                                <td>{{ p.name }}</td>
+                                                <td>{{ p.age }}</td>
+                                                <td><small>{{ p.best_role }}</small></td>
+                                                <td>{{ p.score }}</td>
+                                                <td>{% if p.is_hgn %}<span class="badge bg-success">HGN</span>{% else %}<span class="text-muted">-</span>{% endif %}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Unregistered &mdash; Sell or Loan ({{ registration.unregistered|length }})</h6>
+                                    {% if registration.unregistered|length > 0 %}
+                                    <table class="table table-sm table-bordered">
+                                        <thead>
+                                            <tr><th>Name</th><th>Age</th><th>Role</th><th>Score</th><th>HGN</th></tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for p in registration.unregistered %}
+                                            <tr class="table-danger">
+                                                <td>{{ p.name }}</td>
+                                                <td>{{ p.age }}</td>
+                                                <td><small>{{ p.best_role }}</small></td>
+                                                <td>{{ p.score }}</td>
+                                                <td>{% if p.is_hgn %}<span class="badge bg-success">HGN</span>{% else %}<span class="text-muted">-</span>{% endif %}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                    {% else %}
+                                    <p class="text-muted">All registration-required players fit in the {{ registration.max_squad }}-man squad.</p>
+                                    {% endif %}
+
+                                    <h6 class="mt-3">U21 Exempt &mdash; No Registration Needed ({{ registration.u21_exempt|length }})</h6>
+                                    <p class="text-muted small">These players (age &le; {{ registration.u21_age }}) don't count against the {{ registration.max_squad }}-man squad limit. They can play without being registered.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">Squad Recommendations &mdash; Sorted by Priority</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                {{ table_html | safe }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header"><h5 class="mb-0">How to Read This</h5></div>
+                        <div class="card-body small">
+                            <ul class="mb-0">
+                                <li><strong class="rec-sell">Sell</strong> — surplus to requirements. High sell priority = sell first (usually high value + declining or stagnant).</li>
+                                <li><strong class="rec-loan">Loan</strong> — young player who needs game time to develop. Not ready for first team but has potential.</li>
+                                <li><strong class="rec-promote">Promote</strong> — youth player already outperforming the senior starter. Give them first-team minutes.</li>
+                                <li><strong class="rec-keep">Keep — Key</strong> — current starter. Untouchable.</li>
+                                <li><strong class="rec-keep">Keep — Backup</strong> — within 2 points of starter. Useful squad depth.</li>
+                                <li><strong class="rec-keep">Keep — Prospect</strong> — young player with good potential. Future asset.</li>
+                                <li><strong class="rec-monitor">Keep — Monitor</strong> — borderline case. Watch development before deciding.</li>
+                                <li><strong>Sell Priority</strong> — higher = sell sooner. Factors in surplus gap, age, transfer value, role congestion, and personality.</li>
+                                <li><strong>Rank at Role</strong> — depth chart position (1 = starter, 2 = first backup, etc.).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="card">
+                        <div class="card-body text-center text-muted py-5">
+                            <h4>No recommendations yet</h4>
+                            <p>Upload your full squad HTML (or use saved files) and click <strong>Generate Recommendations</strong>.</p>
+                            <p class="small">The tool evaluates every player against your formation roles and recommends who to sell, loan, promote, or keep.</p>
+                            {% if not formation_slots or formation_slots|length == 0 %}
+                            <p class="small text-warning"><strong>No formation saved.</strong> Go to <a href="/squad">Squad Comparison</a> to set up your formation first.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+    {% if table_html %}
+    $(document).ready(function() {
+        $('#sellTable').DataTable({
+            pageLength: 50,
+            order: [],
+            scrollX: true,
+        });
+    });
+    {% endif %}
+    </script>
+{% endblock %}

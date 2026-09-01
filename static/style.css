@@ -1,0 +1,45 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.role-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.5rem;
+}
+
+.role-grid .form-check {
+    margin-bottom: 0.25rem;
+}
+
+.role-grid .form-check-label {
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.role-grid code {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.card {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+table.dataTable {
+    font-size: 0.85rem;
+}
+
+table.dataTable thead th {
+    background-color: #e9ecef;
+    white-space: nowrap;
+}
+
+table.dataTable tbody td {
+    white-space: nowrap;
+}
+
+.preset-bar .form-select-sm,
+.preset-bar .form-control-sm {
+    display: inline-block;
+}

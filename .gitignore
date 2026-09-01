@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pkl
+session_state.json
+session_squad.pkl
+session_targets.pkl
+session_registration.pkl
+full_output.txt
+sales_pct_output.txt
+test_*.py
+stress_test.py
+FM24 Scorer.bat
+test_squad_full.html

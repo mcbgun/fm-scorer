@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% block title %}FM24 Scorer - Squad Comparison{% endblock %}
+{% block nav_squad %}text-warning fw-bold{% endblock %}
+
+{% block content %}
+        <h1 class="mb-3">Squad Comparison &amp; Smart Filtering</h1>
+        <p class="text-muted">Uses your saved squad and transfer target files. The app scores both, finds your squad's best player per role, and shows only transfer targets who are <strong>actual upgrades</strong>. Upload new files on the <a href="/">main page</a> if needed.</p>
+
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong> {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        {% if has_saved_files and saved %}
+        <div class="alert alert-success d-flex align-items-center justify-content-between" role="alert">
+            <div>
+                <strong>Last session found</strong> (saved {{ saved.saved_at }}) &mdash;
+                {{ saved.profile_id }} profile, {{ saved.roles|length }} roles,
+                {% if saved.formation %}{{ saved.formation|length }}-slot formation{% else %}no formation{% endif %}
+            </div>
+            <button type="button" class="btn btn-success btn-sm" id="useSavedBtn" onclick="useSavedFiles()">Re-run with last files</button>
+        </div>
+        {% endif %}
+
+        {% if stored_results %}
+        <div class="alert alert-info d-flex align-items-center justify-content-between" role="alert">
+            <div>
+                <strong>Previous results available</strong> &mdash; {{ stored_results.num_upgrades }} upgrades found with {{ stored_results.profile_name }}.
+            </div>
+            <a href="/compare" class="btn btn-info btn-sm">View last results &rarr;</a>
+        </div>
+        {% endif %}
+
+        <form action="/compare" method="post" enctype="multipart/form-data" id="compareForm">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-header"><h5 class="mb-0">1. Upload Files</h5></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="squad_file" class="form-label">Squad HTML (your team)</label>
+                                <input class="form-control" type="file" id="squad_file" name="squad_file" accept=".html,.htm" {% if not has_saved_files %}required{% endif %}>
+                                {% if has_saved_files %}<div class="form-text">Optional &mdash; leave blank to use saved files.</div>{% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="targets_file" class="form-label">Transfer Targets HTML (player search)</label>
+                                <input class="form-control" type="file" id="targets_file" name="targets_file" accept=".html,.htm" {% if not has_saved_files %}required{% endif %}>
+                                {% if has_saved_files %}<div class="form-text">Optional &mdash; leave blank to use saved files.</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header"><h5 class="mb-0">2. Weighting Profile</h5></div>
+                        <div class="card-body">
+                            {% for pid, profile in profiles.items() %}
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="profile_id" id="profile_{{ pid }}" value="{{ pid }}" {% if (saved and pid == saved.profile_id) or (not saved and pid == 'default') %}checked{% endif %}>
+                                <label class="form-check-label" for="profile_{{ pid }}">
+                                    <strong>{{ profile.name }}</strong>
+                                    <br><small class="text-muted">{{ profile.description }}</small>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header"><h5 class="mb-0">3. Smart Filters</h5></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Squad assignment</label>
+                                <input type="hidden" name="one_player_per_role" id="opr_hidden" value="{% if saved %}{{ saved.one_player_per_role }}{% else %}true{% endif %}">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="one_player_per_role" {% if not saved or saved.one_player_per_role %}checked{% endif %} onchange="document.getElementById('opr_hidden').value = this.checked ? 'true' : 'false'">
+                                    <label class="form-check-label" for="one_player_per_role">
+                                        One squad player per role
+                                    </label>
+                                    <div class="form-text">Each squad player only counts for their best role. Prevents one player being the benchmark for multiple positions.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Position filter</label>
+                                <select class="form-select" id="position_mode" name="position_mode">
+                                    <option value="can_play" {% if not saved or saved.position_mode == 'can_play' %}selected{% endif %}>Must already play the role's position</option>
+                                    <option value="any" {% if saved and saved.position_mode == 'any' %}selected{% endif %}>Any position (no filter)</option>
+                                    <option value="cannot_play" {% if saved and saved.position_mode == 'cannot_play' %}selected{% endif %}>Can't play position (needs training)</option>
+                                </select>
+                                <div class="form-text">Controls whether targets must already be able to play the role's position, or must need position training.</div>
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="min_margin" class="form-label">Min upgrade margin (points)</label>
+                                <input type="number" class="form-control" id="min_margin" name="min_margin" value="{% if saved %}{{ saved.min_margin }}{% else %}0.0{% endif %}" step="0.1" min="0">
+                            </div>
+                            <div class="mb-2">
+                                <label for="max_age" class="form-label">Max age</label>
+                                <input type="number" class="form-control" id="max_age" name="max_age" value="{% if saved %}{{ saved.max_age }}{% else %}99{% endif %}" min="15" max="50">
+                            </div>
+                            <div class="mb-2">
+                                <label for="max_value" class="form-label">Max transfer value (e.g. 50M, 10M)</label>
+                                <input type="text" class="form-control" id="max_value" name="max_value" value="{% if saved and saved.max_value %}{{ saved.max_value }}{% endif %}" placeholder="No limit">
+                            </div>
+                            <div class="mb-2">
+                                <label for="top_n" class="form-label">Show top N upgrades</label>
+                                <input type="number" class="form-control" id="top_n" name="top_n" value="{% if saved %}{{ saved.top_n }}{% else %}50{% endif %}" min="1" max="500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-8">
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">4. Formation (Best 11)</h5>
+                            <div class="d-flex gap-2">
+                                <select id="formationPresetSelect" class="form-select form-select-sm" style="width: auto;" onchange="loadFormationPreset()">
+                                    <option value="">-- Load formation --</option>
+                                    <option value="4231gp">4-2-3-1 DM AM Wide Gegenpress</option>
+                                    <option value="442">4-4-2 Classic</option>
+                                    <option value="433">4-3-3 Attack</option>
+                                </select>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearFormation()">Clear</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-2">Define your 11 slots. The same role can appear multiple times (e.g. two WBA slots). When set, the app outputs a Best 11 and finds upgrades per slot.</p>
+                            <input type="hidden" name="formation" id="formationInput">
+                            <div id="formationSlots" class="mb-2"></div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <input type="text" id="slotPos" class="form-control form-control-sm" placeholder="Pos (e.g. GK, DL, DR, DC, DM, ML, MR, ST)" style="width: 200px;">
+                                <select id="slotRole" class="form-select form-select-sm" style="width: auto;">
+                                    {% for rid, role in roles.items() %}
+                                    <option value="{{ rid }}">{{ role.name }} ({{ rid }})</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" class="btn btn-sm btn-primary" onclick="addSlot()">Add Slot</button>
+                            </div>
+                            <div class="form-text">Tip: Use 4-2-3-1 DM AM Wide preset for your tactic. Positions are labels only; the role determines scoring.</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">5. Select Roles to Score (for non-formation mode)</h5>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll(true)">Select All</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAll(false)">Clear All</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="preset-bar mb-3 p-2 bg-light rounded">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <strong>Saved Presets:</strong>
+                                    <select id="presetSelect" class="form-select form-select-sm" style="width: auto;">
+                                        <option value="">-- Load preset --</option>
+                                        {% for pname, pdata in presets.items() %}
+                                        <option value="{{ pname }}" data-roles='{{ pdata.roles | tojson }}' data-formation='{{ pdata.get("formation", []) | tojson }}'>{{ pname }} ({{ pdata.roles | length }} roles)</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="loadPreset()">Load</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deletePreset()">Delete</button>
+                                    <span class="text-muted">|</span>
+                                    <input type="text" id="presetName" class="form-control form-control-sm" placeholder="New preset name" style="width: 180px;">
+                                    <button type="button" class="btn btn-sm btn-success" onclick="savePreset()">Save Current</button>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="roles" id="rolesInput">
+                            {% for group_name, role_ids in role_groups.items() %}
+                            <h6 class="mt-3 mb-2 text-primary">{{ group_name }}</h6>
+                            <div class="role-grid mb-3">
+                                {% for rid in role_ids %}
+                                {% set role = roles[rid] %}
+                                <div class="form-check">
+                                    <input class="form-check-input role-checkbox" type="checkbox" id="role_{{ rid }}" value="{{ rid }}">
+                                    <label class="form-check-label" for="role_{{ rid }}" title="Key: {{ role.key|join(', ') }}&#10;Green: {{ role.green|join(', ') }}&#10;Blue: {{ role.blue|join(', ') }}">
+                                        {{ role.name }} <code>({{ rid }})</code>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">Find Upgrades</button>
+                </div>
+            </div>
+        </form>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+    const FORMATION_PRESETS = {
+        "4231gp": [
+            {pos: "GK", role: "sks"},
+            {pos: "DR", role: "wba"},
+            {pos: "DC", role: "cdd"},
+            {pos: "DC", role: "cdd"},
+            {pos: "DL", role: "wba"},
+            {pos: "DMC", role: "hbd"},
+            {pos: "DMC", role: "hbd"},
+            {pos: "AML", role: "ifs"},
+            {pos: "AMC", role: "ams"},
+            {pos: "AMR", role: "ifa"},
+            {pos: "ST", role: "afa"},
+        ],
+        "442": [
+            {pos: "GK", role: "gkd"},
+            {pos: "DR", role: "fbd"},
+            {pos: "DCR", role: "cdd"},
+            {pos: "DCL", role: "cdd"},
+            {pos: "DL", role: "fbd"},
+            {pos: "MR", role: "wms"},
+            {pos: "MCR", role: "cms"},
+            {pos: "MCL", role: "cms"},
+            {pos: "ML", role: "wms"},
+            {pos: "STL", role: "dlfa"},
+            {pos: "STR", role: "afa"},
+        ],
+        "433": [
+            {pos: "GK", role: "skd"},
+            {pos: "DR", role: "wba"},
+            {pos: "DCR", role: "cdd"},
+            {pos: "DCL", role: "cdd"},
+            {pos: "DL", role: "wba"},
+            {pos: "MCR", role: "dmd"},
+            {pos: "MCL", role: "b2bs"},
+            {pos: "AMR", role: "ifa"},
+            {pos: "AMC", role: "apa"},
+            {pos: "AML", role: "ifs"},
+            {pos: "STC", role: "afa"},
+        ],
+    };
+
+    // Role name lookup (server-rendered, escaped by Jinja)
+    const ROLE_NAMES = {
+        {% for rid, role in roles.items() %}
+        "{{ rid }}": "{{ role.name | e }}",
+        {% endfor %}
+    };
+
+    function escapeHtml(s) {
+        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    let formationSlots = [];
+
+    function renderFormation() {
+        const container = document.getElementById('formationSlots');
+        if (!formationSlots.length) {
+            container.innerHTML = '<span class="text-muted">No slots added. Use a preset or add slots manually.</span>';
+            updateFormationInput();
+            return;
+        }
+        let html = '<table class="table table-sm"><thead><tr><th>#</th><th>Pos</th><th>Role</th><th></th></tr></thead><tbody>';
+        formationSlots.forEach((slot, i) => {
+            const posEsc = escapeHtml(slot.pos);
+            html += `<tr><td>${i+1}</td><td><input type="text" class="form-control form-control-sm slot-pos" value="${posEsc}" data-idx="${i}" style="width:80px;"></td><td><select class="form-select form-select-sm slot-role" data-idx="${i}">${roleOptions(slot.role)}</select></td><td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeSlot(${i})">X</button></td></tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+        container.querySelectorAll('.slot-pos').forEach(el => el.addEventListener('change', e => {
+            formationSlots[parseInt(e.target.dataset.idx)].pos = e.target.value;
+            updateFormationInput();
+        }));
+        container.querySelectorAll('.slot-role').forEach(el => el.addEventListener('change', e => {
+            formationSlots[parseInt(e.target.dataset.idx)].role = e.target.value;
+            updateFormationInput();
+        }));
+        updateFormationInput();
+    }
+
+    function roleOptions(selected) {
+        let html = '';
+        for (const [rid, name] of Object.entries(ROLE_NAMES)) {
+            html += `<option value="${rid}" ${rid === selected ? 'selected' : ''}>${escapeHtml(name)} (${rid})</option>`;
+        }
+        return html;
+    }
+
+    function updateFormationInput() {
+        document.getElementById('formationInput').value = JSON.stringify(formationSlots);
+        const uniqueRoles = [...new Set(formationSlots.map(s => s.role))];
+        document.querySelectorAll('.role-checkbox').forEach(cb => {
+            cb.checked = uniqueRoles.includes(cb.value);
+        });
+        updateRolesInput();
+    }
+
+    function addSlot() {
+        const pos = document.getElementById('slotPos').value.trim();
+        const role = document.getElementById('slotRole').value;
+        if (!pos) { alert('Enter a position label'); return; }
+        formationSlots.push({pos, role});
+        document.getElementById('slotPos').value = '';
+        renderFormation();
+    }
+
+    function removeSlot(idx) {
+        formationSlots.splice(idx, 1);
+        renderFormation();
+    }
+
+    function clearFormation() {
+        formationSlots = [];
+        renderFormation();
+    }
+
+    function loadFormationPreset() {
+        const sel = document.getElementById('formationPresetSelect');
+        const key = sel.value;
+        if (!key) return;
+        formationSlots = JSON.parse(JSON.stringify(FORMATION_PRESETS[key]));
+        renderFormation();
+    }
+
+    function selectAll(checked) {
+        document.querySelectorAll('.role-checkbox').forEach(cb => cb.checked = checked);
+        updateRolesInput();
+    }
+    function updateRolesInput() {
+        const selected = Array.from(document.querySelectorAll('.role-checkbox:checked')).map(cb => cb.value);
+        document.getElementById('rolesInput').value = selected.join(',');
+    }
+    function loadPreset() {
+        const select = document.getElementById('presetSelect');
+        const opt = select.selectedOptions[0];
+        if (!opt || !opt.value) return;
+        const roles = JSON.parse(opt.dataset.roles);
+        document.querySelectorAll('.role-checkbox').forEach(cb => {
+            cb.checked = roles.includes(cb.value);
+        });
+        updateRolesInput();
+        const formation = opt.dataset.formation;
+        if (formation && formation !== '[]') {
+            formationSlots = JSON.parse(formation);
+            renderFormation();
+        }
+    }
+    async function savePreset() {
+        const nameInput = document.getElementById('presetName');
+        const name = nameInput.value.trim();
+        if (!name) { alert('Enter a preset name first'); return; }
+        const roles = document.getElementById('rolesInput').value.split(',').filter(r => r);
+        if (!roles.length) { alert('Select at least one role first'); return; }
+        const body = {roles};
+        if (formationSlots.length) body.formation = formationSlots;
+        const resp = await fetch('/api/presets/' + encodeURIComponent(name), {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body),
+        });
+        if (resp.ok) { alert('Saved preset: ' + name); location.reload(); }
+        else { const err = await resp.json(); alert('Error: ' + (err.error || 'Could not save')); }
+    }
+    async function deletePreset() {
+        const select = document.getElementById('presetSelect');
+        const name = select.value;
+        if (!name) { alert('Select a preset to delete'); return; }
+        if (!confirm('Delete preset "' + name + '"?')) return;
+        const resp = await fetch('/api/presets/' + encodeURIComponent(name), {method: 'DELETE'});
+        if (resp.ok) { alert('Deleted preset: ' + name); location.reload(); }
+        else { alert('Could not delete preset'); }
+    }
+
+    function useSavedFiles() {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/recompare';
+        form.enctype = 'application/x-www-form-urlencoded';
+        const fields = {
+            profile_id: document.querySelector('input[name="profile_id"]:checked')?.value || 'default',
+            roles: document.getElementById('rolesInput').value,
+            formation: document.getElementById('formationInput').value,
+            min_margin: document.getElementById('min_margin').value,
+            max_age: document.getElementById('max_age').value,
+            max_value: document.getElementById('max_value').value,
+            top_n: document.getElementById('top_n').value,
+            position_mode: document.getElementById('position_mode').value,
+            one_player_per_role: document.getElementById('opr_hidden').value,
+        };
+        for (const [key, val] of Object.entries(fields)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = val;
+            form.appendChild(input);
+        }
+        const btn = document.getElementById('useSavedBtn');
+        btn.disabled = true;
+        btn.textContent = 'Running...';
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    document.querySelectorAll('.role-checkbox').forEach(cb => cb.addEventListener('change', updateRolesInput));
+    document.getElementById('compareForm').addEventListener('submit', function() {
+        updateRolesInput();
+        updateFormationInput();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Comparing...';
+    });
+
+    const savedData = {% if saved %}{{ saved | tojson }}{% else %}null{% endif %};
+    if (savedData) {
+        if (savedData.formation && savedData.formation.length > 0) {
+            formationSlots = savedData.formation;
+        }
+        if (savedData.roles && savedData.roles.length > 0) {
+            document.querySelectorAll('.role-checkbox').forEach(cb => {
+                cb.checked = savedData.roles.includes(cb.value);
+            });
+        }
+    }
+    renderFormation();
+    updateRolesInput();
+    </script>
+{% endblock %}

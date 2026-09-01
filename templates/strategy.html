@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+{% block title %}FM24 Scorer — Transfer Strategy{% endblock %}
+{% block nav_strategy %}text-warning fw-bold{% endblock %}
+
+{% block head %}
+    <style>
+        .action-sell    { border-left: 4px solid #dc3545; }
+        .action-buy     { border-left: 4px solid #198754; }
+        .action-promote { border-left: 4px solid #0d6efd; }
+        .action-loan    { border-left: 4px solid #fd7e14; }
+        .quality-up   { color: #198754; font-weight: bold; }
+        .quality-down { color: #dc3545; font-weight: bold; }
+        .investment-badge { font-size: 0.75em; }
+        .stat-card { border-radius: 8px; }
+    </style>
+{% endblock %}
+
+{% block content %}
+        <h1 class="mb-4">Transfer Strategy Engine</h1>
+
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong> {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        {% if not plan %}
+        <div class="alert alert-info">
+            <strong>How it works:</strong> Upload your squad file and a scouting targets file (player search export from FM).
+            Enter your transfer and wage budgets from FM24's Finances tab. The engine will generate the optimal transfer plan
+            that maximizes multi-season squad quality while staying within budget and registration rules.
+        </div>
+
+        <form action="/strategy" method="post" enctype="multipart/form-data">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header"><h5 class="mb-0">1. Files & Style</h5></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Full Squad HTML</label>
+                                <input class="form-control" type="file" name="squad_file" accept=".html,.htm" {% if not has_saved_files %}required{% endif %}>
+                                {% if has_saved_files %}<div class="form-text">Optional — leave blank to use saved squad.</div>{% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Scouting Targets HTML (optional)</label>
+                                <input class="form-control" type="file" name="targets_file" accept=".html,.htm">
+                                <div class="form-text">FM Player Search export of players you're interested in signing.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Playing Style</label>
+                                {% for pid, profile in profiles.items() %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="profile_id" id="strat_{{ pid }}" value="{{ pid }}" {% if (saved and pid == saved.profile_id) or (not saved and pid == 'default') %}checked{% endif %}>
+                                    <label class="form-check-label" for="strat_{{ pid }}">
+                                        <strong>{{ profile.name }}</strong>
+                                        <small class="text-muted d-block">{{ profile.description }}</small>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header"><h5 class="mb-0">2. Budget (from FM24 Finances tab)</h5></div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">Enter values exactly as shown in FM24. They're auto-converted.</p>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Transfer Budget</label>
+                                    <input type="number" class="form-control" name="transfer_budget" value="{{ saved_transfer_budget|default(0) }}" min="0" step="any">
+                                    <div class="form-text">Current transfer budget</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Wage Budget</label>
+                                    <input type="number" class="form-control" name="total_wage_budget" value="{{ saved_total_wage_budget|default(0) }}" min="0" step="any">
+                                    <div class="form-text">Current wage budget</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Max Transfer Budget</label>
+                                    <input type="number" class="form-control" name="max_transfer_budget" value="{{ saved_max_transfer_budget|default(0) }}" min="0" step="any">
+                                    <div class="form-text">When slider is far right</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Current Wage Spend</label>
+                                    <input type="number" class="form-control" name="current_wage_spend" value="{{ saved_current_wage_spend|default(0) }}" min="0" step="any">
+                                    <div class="form-text">Actual weekly wage spend</div>
+                                </div>
+                            </div>
+                            <hr class="my-3">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Board Sales % Available</label>
+                                    <input type="number" class="form-control" name="board_sales_percentage" value="{{ saved_board_sales_percentage|default(100) }}" min="0" max="100" step="5">
+                                    <div class="form-text">Often 70-80% in-game</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Board Slider Cap (%)</label>
+                                    <input type="number" class="form-control" name="board_slider_cap" value="{{ saved_board_slider_cap|default(100) }}" min="0" max="100" step="5">
+                                    <div class="form-text">How far board lets you slide</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header"><h5 class="mb-0">3. Options</h5></div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Seasons</label>
+                                    <input type="number" class="form-control" name="seasons" value="{{ saved_seasons|default(3) }}" min="1" max="5">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Max transfers</label>
+                                    <input type="number" class="form-control" name="max_transfers" value="{{ saved_max_transfers|default(10) }}" min="1" max="20">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Wage Budget (extra)</label>
+                                    <input type="number" class="form-control" name="wage_budget" value="{{ saved_wage_budget|default(0) }}" min="0" step="any">
+                                    <div class="form-text">Usually 0</div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="form-label">Lock players (don't sell)</label>
+                                <input type="text" class="form-control" name="locked_players" value="{{ saved_locked_players|default('') }}" placeholder="e.g. Player 1, Player 2">
+                                <div class="form-text">Comma-separated names</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg">Generate Optimal Plan</button>
+        </form>
+        {% else %}
+        <div class="alert {% if plan.projected_quality.improvement >= 0 %}alert-success{% else %}alert-warning{% endif %} mb-4">
+            <h4 class="mb-2">Optimal Plan</h4>
+            <p class="mb-2">{{ plan.reasoning }}</p>
+            <div class="row g-3 mt-1">
+                <div class="col-auto">
+                    <strong>Projected quality:</strong>
+                    <span class="{% if plan.projected_quality.improvement >= 0 %}quality-up{% else %}quality-down{% endif %}">
+                        {{ plan.projected_quality.current }} &rarr; {{ plan.projected_quality.projected }}
+                        ({{ plan.projected_quality.improvement|default(0)|string }} over {{ plan.projected_quality.seasons }} seasons)
+                    </span>
+                </div>
+                <div class="col-auto">
+                    <strong>Net spend:</strong> &pound;{{ plan.financials.net_spend }}M
+                </div>
+                <div class="col-auto">
+                    <strong>Wage change:</strong> {{ plan.financials.wage_change|default(0) }}K/week
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card stat-card text-center border-danger">
+                    <div class="card-body">
+                        <h3 class="text-danger mb-0">{{ plan.actions | selectattr("type", "equalto", "sell") | list | length }}</h3>
+                        <small class="text-muted">Sell</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card stat-card text-center border-success">
+                    <div class="card-body">
+                        <h3 class="text-success mb-0">{{ plan.actions | selectattr("type", "equalto", "buy") | list | length }}</h3>
+                        <small class="text-muted">Buy</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card stat-card text-center border-primary">
+                    <div class="card-body">
+                        <h3 class="text-primary mb-0">{{ plan.actions | selectattr("type", "equalto", "promote") | list | length }}</h3>
+                        <small class="text-muted">Promote</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card stat-card text-center border-warning">
+                    <div class="card-body">
+                        <h3 class="text-warning mb-0">{{ plan.actions | selectattr("type", "equalto", "loan") | list | length }}</h3>
+                        <small class="text-muted">Loan Out</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header"><h5 class="mb-0">Squad Diagnosis</h5></div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-auto"><strong>Squad size:</strong> {{ plan.diagnosis.squad_size }}</div>
+                    <div class="col-auto"><strong>Current quality:</strong> {{ plan.diagnosis.current_quality }}</div>
+                    <div class="col-auto"><strong>Current wages:</strong> {{ plan.diagnosis.current_wages }}K/week</div>
+                    <div class="col-auto"><strong>Surplus players:</strong> {{ plan.diagnosis.surplus_count }}</div>
+                </div>
+                {% if plan.diagnosis.gaps_detail %}
+                <div class="mt-3">
+                    <strong>Positional gaps:</strong>
+                    {% for g in plan.diagnosis.gaps_detail %}
+                    <span class="badge bg-warning text-dark me-1">{{ g.name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if plan.budget_slider %}
+        <div class="card mb-3 border-primary">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Budget Slider</h5>
+                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#sliderDetails">Show details</button>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="text-muted small">Recommended position</div>
+                            <span class="badge bg-primary fs-4">Position {{ plan.budget_slider.slider_position }} / 10</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Transfer budget</div>
+                        <strong>&pound;{{ plan.budget_slider.transfer_budget_after }}M</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Wage budget</div>
+                        <strong>{{ plan.budget_slider.wage_budget_after }}K/week</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Wage headroom for buys</div>
+                        <strong>{{ plan.budget_slider.wage_headroom_after }}K/week</strong>
+                    </div>
+                </div>
+
+                <div class="collapse mt-3" id="sliderDetails">
+                    <hr>
+                    <p class="text-muted small">
+                        FM24's budget slider converts between wage budget and transfer budget at a {{ plan.budget_slider.conversion_factor }}&times; factor.
+                        The engine tested all 10 slider positions and picked the one that maximizes buy quality.
+                    </p>
+                    <div class="row g-2 mb-3 small">
+                        <div class="col-auto"><strong>Transfer gained:</strong> +&pound;{{ plan.budget_slider.transfer_from_slider }}M</div>
+                        <div class="col-auto"><strong>Wage sacrificed:</strong> -{{ plan.budget_slider.wage_sacrificed }}K/week</div>
+                        <div class="col-auto"><strong>Parsed squad wages:</strong> {{ plan.budget_slider.squad_wage_bill }}K/week</div>
+                        <div class="col-auto"><strong>In-game wage spend:</strong> {{ plan.budget_slider.current_wage_spend }}K/week</div>
+                        <div class="col-auto"><strong>Post-sell wage spend:</strong> {{ plan.budget_slider.post_sell_wage_spend }}K/week</div>
+                    </div>
+                    {% if plan.budget_slider.all_positions %}
+                    <table class="table table-sm table-bordered">
+                        <thead><tr><th>Position</th><th>Wage Budget (K/w)</th><th>Transfer Budget (&pound;M)</th><th>Wage Headroom (K/w)</th><th>Transfer After Sells (&pound;M)</th><th>Wage Room for Buys (K/w)</th><th>Buys</th><th>Quality Gain</th><th>Valid</th></tr></thead>
+                        <tbody>
+                        {% for pos in plan.budget_slider.all_positions %}
+                        <tr {% if pos.position == plan.budget_slider.slider_position %}class="table-primary fw-bold"{% endif %}>
+                            <td>{{ pos.position }}</td>
+                            <td>{{ pos.wage_budget }}</td>
+                            <td>{{ pos.transfer_budget }}</td>
+                            <td>{{ pos.wage_headroom }}</td>
+                            <td>{{ pos.transfer_after_sells | default(pos.transfer_budget) }}</td>
+                            <td>{{ pos.wage_room_for_buys | default(0) }}</td>
+                            <td>{{ pos.num_buys }}</td>
+                            <td>{{ pos.total_quality_gain }}</td>
+                            <td>{% if pos.valid %}<span class="text-success">&#10003;</span>{% else %}<span class="text-danger">&#10007;</span>{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="text-muted small">
+                        Position 1 = max wage budget (slider far left). Position 10 = max transfer budget (slider far right).
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mb-3">
+            <div class="card-header"><h5 class="mb-0">Recommended Actions</h5></div>
+            <div class="card-body">
+                {% set sells = plan.actions | selectattr("type", "equalto", "sell") | list %}
+                {% set buys = plan.actions | selectattr("type", "equalto", "buy") | list %}
+                {% set promotes = plan.actions | selectattr("type", "equalto", "promote") | list %}
+                {% set loans = plan.actions | selectattr("type", "equalto", "loan") | list %}
+
+                {% if sells %}
+                <h6 class="text-danger">Sell ({{ sells|length }})</h6>
+                <table class="table table-sm table-bordered mb-3">
+                    <thead><tr><th>Player</th><th>Age</th><th>Role</th><th>Value (&pound;M)</th><th>Wage Saved (K/w)</th><th>Reason</th></tr></thead>
+                    <tbody>
+                    {% for a in sells %}
+                    <tr class="action-sell">
+                        <td>{{ a.name }}</td><td>{{ a.age }}</td><td><small>{{ a.role }}</small></td>
+                        <td>{{ a.value }}</td><td>{{ a.wage_saved }}</td><td><small>{{ a.reason }}</small></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
+                {% if buys %}
+                <h6 class="text-success">Buy ({{ buys|length }})</h6>
+                <table class="table table-sm table-bordered mb-3">
+                    <thead><tr><th>Player</th><th>Age</th><th>Role</th><th>Cost (&pound;M)</th><th>Wage (K/w)</th><th>Quality Gain</th><th>Type</th><th>Reason</th></tr></thead>
+                    <tbody>
+                    {% for a in buys %}
+                    <tr class="action-buy">
+                        <td>{{ a.name }}</td><td>{{ a.age }}</td><td><small>{{ a.role }}</small></td>
+                        <td>{{ a.value }}</td><td>{{ a.wage }}</td>
+                        <td>{{ a.quality_gain }}</td>
+                        <td><span class="badge bg-info investment-badge">{{ a.investment_type }}</span></td>
+                        <td><small>{{ a.reason }}</small></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
+                {% if promotes %}
+                <h6 class="text-primary">Promote from Youth ({{ promotes|length }})</h6>
+                <table class="table table-sm table-bordered mb-3">
+                    <thead><tr><th>Player</th><th>Age</th><th>Role</th><th>Reason</th></tr></thead>
+                    <tbody>
+                    {% for a in promotes %}
+                    <tr class="action-promote">
+                        <td>{{ a.name }}</td><td>{{ a.age }}</td><td><small>{{ a.role }}</small></td><td><small>{{ a.reason }}</small></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
+                {% if loans %}
+                <h6 class="text-warning">Loan Out ({{ loans|length }})</h6>
+                <table class="table table-sm table-bordered mb-3">
+                    <thead><tr><th>Player</th><th>Age</th><th>Role</th><th>Reason</th></tr></thead>
+                    <tbody>
+                    {% for a in loans %}
+                    <tr class="action-loan">
+                        <td>{{ a.name }}</td><td>{{ a.age }}</td><td><small>{{ a.role }}</small></td><td><small>{{ a.reason }}</small></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
+                {% if not plan.actions %}
+                <p class="text-muted">No changes recommended — the current squad is well-balanced.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header"><h5 class="mb-0">Financial Summary</h5></div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr><td>Transfer budget</td><td>&pound;{{ plan.financials.transfer_budget }}M</td></tr>
+                    <tr><td>Total sales income</td><td class="text-success">+&pound;{{ plan.financials.total_sales }}M</td></tr>
+                    {% if plan.financials.board_sales_percentage and plan.financials.board_sales_percentage < 100 %}
+                    <tr><td>Board sales % available</td><td>{{ plan.financials.board_sales_percentage }}%</td></tr>
+                    <tr><td>Available from sales</td><td class="text-success">+&pound;{{ plan.financials.available_proceeds }}M</td></tr>
+                    {% endif %}
+                    <tr><td>Total purchase costs</td><td class="text-danger">-&pound;{{ plan.financials.total_buys }}M</td></tr>
+                    <tr class="fw-bold"><td>Net spend</td><td>&pound;{{ plan.financials.net_spend }}M</td></tr>
+                    <tr><td>Remaining budget</td><td>&pound;{{ plan.financials.remaining_budget }}M</td></tr>
+                    <tr><td>Wage change</td><td>{{ plan.financials.wage_change }}K/week</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <a href="/strategy?new=1" class="btn btn-outline-secondary">Generate New Plan</a>
+        </div>
+        {% endif %}
+{% endblock %}
