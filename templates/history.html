@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% set nav = "history" %}
+{% block title %}History · FM Planner{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-baseline gap-3 mb-2">
+    <h1 class="h3 mb-0">History</h1>
+    <span class="text-muted small">Every squad upload is a snapshot. Upload a new export each window and this page tracks how each player's score, value and wage move.</span>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card mb-3"><div class="card-header py-2"><strong>Squad snapshots ({{ snapshots|length }})</strong></div>
+            <table class="table table-sm small mb-0"><thead><tr><th>Season</th><th>Rows</th><th>Uploaded</th><th>File</th></tr></thead>
+            <tbody>{% for s in snapshots %}<tr><td>{{ s.season_label }}</td><td>{{ s.n_rows }}</td><td>{{ s.created_at[:16] }}</td><td class="text-truncate" style="max-width:140px" title="{{ s.filename }}">{{ s.filename }}</td></tr>{% else %}<tr><td colspan="4" class="text-muted">No snapshots yet.</td></tr>{% endfor %}</tbody></table>
+        </div>
+        {% if snapshots|length < 2 %}<div class="alert alert-info small">Trends appear once you have two or more squad snapshots (e.g. pre-season and January).</div>{% endif %}
+    </div>
+    <div class="col-lg-8">
+        {% if detail %}
+        <div class="card mb-3"><div class="card-header py-2 d-flex justify-content-between"><strong>{{ detail[-1].name }}</strong><a class="small" href="/history">all players</a></div>
+            <table class="table table-sm small mb-0"><thead><tr><th>Season</th><th>Age</th><th>Best role</th><th>Score</th><th>Value</th><th>Wage</th><th>Recorded</th><th>Attributes changed</th></tr></thead>
+            <tbody>{% set ns = namespace(prev=None) %}{% for h in detail %}
+            <tr><td>{{ h.season_label }}</td><td>{{ h.age }}</td><td>{{ h.best_role }}</td><td><strong>{{ h.best_score }}</strong>{% if ns.prev %} <span class="{{ 'text-success' if h.best_score > ns.prev.best_score else 'text-muted' }}">{{ "%+.1f"|format(h.best_score - ns.prev.best_score) }}</span>{% endif %}</td>
+                <td>{{ h.value_lo|millions }}</td><td>{{ h.wage_k|wage }}</td><td>{{ h.recorded_at[:10] }}</td>
+                <td class="wrap">{% if ns.prev %}{% for k, v in h.attrs.items() %}{% set pv = ns.prev.attrs.get(k) %}{% if pv is not none and v != pv %}<span class="badge bg-light text-dark border">{{ k }} {{ pv|int }}→{{ v|int }}</span> {% endif %}{% endfor %}{% endif %}</td></tr>
+            {% set ns.prev = h %}{% endfor %}</tbody></table>
+        </div>
+        {% endif %}
+        <div class="card"><div class="card-header py-2"><strong>Player trends</strong> <span class="text-muted small">— first vs latest snapshot</span></div>
+            <div class="card-body p-2">
+            <table class="table table-sm table-striped js-datatable w-100 small" data-order-col="5" data-page-length="50">
+                <thead><tr><th>Player</th><th>Snapshots</th><th>Age</th><th>Best role</th><th>Score first → last</th><th>Δ score</th><th>Value first → last</th><th>Wage first → last</th></tr></thead>
+                <tbody>{% for o in overview %}
+                <tr><td><a href="/history?player={{ o.player_key|urlencode }}">{{ o.name }}</a></td><td>{{ o.points }} <span class="text-muted">({{ o.first_season }} → {{ o.last_season }})</span></td><td>{{ o.age }}</td><td>{{ o.best_role }}</td>
+                    <td>{{ o.score_first }} → {{ o.score_last }}</td><td class="fw-bold {{ 'text-success' if o.score_delta > 0 else ('text-danger' if o.score_delta < 0 else 'text-muted') }}">{{ "%+.1f"|format(o.score_delta) }}</td>
+                    <td>{{ o.value_first|millions }} → {{ o.value_last|millions }}</td><td>{{ o.wage_first|wage }} → {{ o.wage_last|wage }}</td></tr>
+                {% endfor %}</tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

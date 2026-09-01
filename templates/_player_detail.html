@@ -1,0 +1,82 @@
+{# expects p (from WorkspaceContext.player_detail) #}
+{% set b = p.best %}
+<div class="d-flex flex-wrap gap-3 align-items-start mb-2 small">
+    <div>
+        <div class="fs-5 fw-bold">{{ p.name }} <span class="text-muted fs-6">{{ p.age }} · {{ p.position }}</span></div>
+        <div class="text-muted">{{ p.club }}{% if p.personality %} · {{ p.personality }}{% endif %}</div>
+        <div>{{ p.transfer_value }} · {{ p.wage }}{% if p.hg_status %} · HG: {{ p.hg_status }}{% endif %}{% if p.statuses %} · {{ p.statuses }}{% endif %}</div>
+    </div>
+    <div class="ms-auto text-end">
+        {% if p.is_starter %}<span class="badge bg-success">Starter · {{ p.starter_slot }}</span>{% elif p.source == "squad" %}<span class="badge bg-secondary">Backup</span>{% endif %}
+        {% if p.needs_scouting %}<span class="badge badge-scout" title="{{ p.scouting_pct }}% of attributes known exactly">Scouting required ({{ p.scouting_pct|int }}%)</span>{% endif %}
+        <form method="post" action="/shortlist/{{ 'remove' if p.shortlisted else 'add' }}" class="d-inline ms-1">
+            <input type="hidden" name="name" value="{{ p.name }}"><input type="hidden" name="source" value="{{ 'target' if p.source == 'targets' else 'squad' }}"><input type="hidden" name="next" value="/player/{{ p.source }}/{{ p.idx }}">
+            <button class="btn btn-sm btn-{{ 'warning' if p.shortlisted else 'outline-warning' }}">{{ 'Unpin' if p.shortlisted else 'Pin to shortlist' }}</button>
+        </form>
+    </div>
+</div>
+
+{% if b %}
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card h-100"><div class="card-body p-2">
+            <div class="small fw-bold mb-1">Best fit: {{ b.pos }} · {{ b.role_name }} — <span class="text-primary">{{ "%.1f"|format(b.score) }}</span>{% if b.lo != b.hi %} <span class="score-band">({{ "%.1f"|format(b.lo) }}–{{ "%.1f"|format(b.hi) }})</span>{% endif %}
+                {% if b.familiarity < 1 %}<span class="text-muted">× {{ b.familiarity }} familiarity = {{ b.effective }}</span>{% endif %}</div>
+            {% set labels = [] %}{% set vals = [] %}{% set los = [] %}{% set his = [] %}
+            {% for tier in ["key", "green", "blue"] %}{% for a in b.tiers[tier].attrs %}{% set _ = labels.append(a.attr) %}{% set _ = vals.append(a.value) %}{% set _ = los.append(a.lo) %}{% set _ = his.append(a.hi) %}{% endfor %}{% endfor %}
+            <canvas width="300" height="280" class="d-block mx-auto" data-radar='{{ {"labels": labels, "values": vals, "lo": los, "hi": his}|tojson_safe }}'></canvas>
+            <div class="small text-muted">Blue = role attributes ({{ b.tiers.key.attrs|length }} key, {{ b.tiers.green.attrs|length }} preferred, {{ b.tiers.blue.attrs|length }} useful); yellow = scouting uncertainty.</div>
+        </div></div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100"><div class="card-body p-2 small">
+            <div class="fw-bold mb-1">Score breakdown</div>
+            {% for tier, label, cls in [("key", "Key ×5", "tier-key"), ("green", "Preferred ×3", "tier-green"), ("blue", "Useful ×1", "tier-blue")] %}
+            <div class="d-flex justify-content-between"><span class="{{ cls }}">{{ label }}</span><span>avg {{ b.tiers[tier].avg }}</span></div>
+            <div class="d-flex flex-wrap gap-1 mb-2">
+                {% for a in b.tiers[tier].attrs %}<span class="badge bg-light text-dark border" title="{{ a.attr }}{% if a.lo != a.hi %} ({{ a.lo|int }}–{{ a.hi|int }}){% endif %}">{{ a.attr }} <strong>{{ a.value|int }}</strong>{% if a.lo != a.hi %}<span class="text-warning">?</span>{% endif %}</span>{% endfor %}
+            </div>
+            {% endfor %}
+            <div class="fw-bold mb-1 mt-2">Projection <span class="text-muted fw-normal">(estimate — band widens with age uncertainty)</span></div>
+            <canvas width="300" height="120" class="d-block w-100" data-projection='{{ p.projection|tojson_safe }}'></canvas>
+            <div>Potential (best role): <strong>{{ "%.1f"|format(p.potential.mid) }}</strong> <span class="score-band">({{ "%.1f"|format(p.potential.lo) }}–{{ "%.1f"|format(p.potential.hi) }})</span></div>
+            {% if p.potential.notes %}<ul class="mb-1 ps-3 text-muted">{% for n in p.potential.notes %}<li>{{ n }}</li>{% endfor %}</ul>{% endif %}
+            {% set sg = p.signals %}
+            <div class="text-muted">
+                {% if sg.potential_stars is not none %}Potential {{ sg.potential_stars }}★ · {% endif %}
+                {% if sg.training_rating is not none %}Training {{ sg.training_rating }} · {% endif %}
+                {% if sg.playing_time %}{{ sg.playing_time }} · {% endif %}
+                {% if sg.injury %}Injury: {{ sg.injury }} · {% endif %}
+                {% if sg.contract_expiry_year %}Contract to {{ sg.contract_expiry_year }}{% endif %}
+            </div>
+        </div></div>
+    </div>
+</div>
+
+<div class="card mt-3"><div class="card-body p-2">
+    <div class="small fw-bold mb-1">Suitability for every slot in {{ hdr.formation.name }}</div>
+    <table class="table table-sm small mb-0">
+        <thead><tr><th>Slot</th><th>Role</th><th>Raw</th><th>Range</th><th>Familiarity</th><th>Effective</th><th>Incumbent</th><th>Δ</th></tr></thead>
+        <tbody>
+        {% for r in p.roles %}
+        <tr class="{{ 'table-light text-muted' if r.effective is none else '' }}">
+            <td>{{ r.pos }}</td><td>{{ r.role_name }}</td><td>{{ "%.1f"|format(r.score) }}</td>
+            <td class="score-band">{% if r.lo != r.hi %}{{ "%.1f"|format(r.lo) }}–{{ "%.1f"|format(r.hi) }}{% else %}exact{% endif %}</td>
+            <td>{% if r.familiarity >= 1 %}Natural{% elif r.familiarity >= 0.9 %}Accomplished{% elif r.familiarity >= 0.75 %}Competent{% elif r.familiarity > 0 %}Awkward{% else %}Cannot play{% endif %} <span class="text-muted">({{ r.familiarity }})</span></td>
+            <td><strong>{{ r.effective if r.effective is not none else "—" }}</strong></td>
+            <td>{{ r.incumbent or "—" }}{% if r.incumbent_score %} ({{ "%.1f"|format(r.incumbent_score) }}){% endif %}</td>
+            <td>{% if r.effective is not none and r.incumbent_score %}{% set d = r.effective - r.incumbent_score %}<span class="{{ 'text-success' if d > 0 else 'text-muted' }}">{{ "%+.1f"|format(d) }}</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div></div>
+{% endif %}
+
+{% if p.history and p.history|length > 1 %}
+<div class="card mt-3"><div class="card-body p-2 small">
+    <div class="fw-bold mb-1">History across snapshots</div>
+    <table class="table table-sm mb-0"><thead><tr><th>Season</th><th>Age</th><th>Best role</th><th>Score</th><th>Value</th><th>Wage</th><th>Recorded</th></tr></thead>
+    <tbody>{% for h in p.history %}<tr><td>{{ h.season_label }}</td><td>{{ h.age }}</td><td>{{ h.best_role }}</td><td>{{ h.best_score }}</td><td>{{ h.value_lo|millions }}{% if h.value_hi != h.value_lo %}–{{ h.value_hi|millions }}{% endif %}</td><td>{{ h.wage_k|wage }}</td><td>{{ h.recorded_at[:10] }}</td></tr>{% endfor %}</tbody></table>
+</div></div>
+{% endif %}

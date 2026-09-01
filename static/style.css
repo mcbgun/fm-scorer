@@ -43,3 +43,44 @@ table.dataTable tbody td {
 .preset-bar .form-control-sm {
     display: inline-block;
 }
+
+/* --- layout / header ------------------------------------------------- */
+.state-bar { position: sticky; top: 56px; z-index: 1010; }
+.player-drawer { width: 560px; max-width: 95vw; }
+a[data-player-source] { cursor: pointer; text-decoration: none; border-bottom: 1px dotted #6c757d; color: inherit; }
+a[data-player-source]:hover { color: #0d6efd; }
+
+/* --- pitch ----------------------------------------------------------- */
+.pitch { position: relative; width: 100%; padding-top: 130%; background: linear-gradient(#2e7d32, #388e3c); border-radius: 8px; border: 2px solid #c8e6c9; overflow: hidden; }
+.pitch::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 2px solid rgba(255,255,255,0.5); }
+.pitch::after { content: ""; position: absolute; left: 50%; top: 50%; width: 22%; padding-top: 22%; transform: translate(-50%, -50%); border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; }
+.pitch .box { position: absolute; left: 20%; right: 20%; height: 16%; border: 2px solid rgba(255,255,255,0.5); }
+.pitch .box.top { top: -2px; border-top: 0; }
+.pitch .box.bottom { bottom: -2px; border-bottom: 0; }
+.pitch .slot { position: absolute; transform: translate(-50%, -50%); text-align: center; width: 24%; }
+.pitch .slot .chip { display: inline-block; min-width: 2.6rem; padding: 2px 6px; border-radius: 12px; font-weight: 700; font-size: 0.8rem; color: #fff; background: #1565c0; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+.pitch .slot .chip.weak { background: #c62828; }
+.pitch .slot .chip.thin { border-color: #ffca28; }
+.pitch .slot .chip.empty { background: #616161; }
+.pitch .slot .name { display: block; font-size: 0.72rem; color: #fff; text-shadow: 0 1px 2px #000; line-height: 1.1; margin-top: 2px; }
+.pitch .slot .role { display: block; font-size: 0.62rem; color: #e8f5e9; text-shadow: 0 1px 2px #000; }
+.pitch-sm { padding-top: 110%; }
+.pitch-sm .slot .name, .pitch-sm .slot .role { display: none; }
+
+/* --- misc ------------------------------------------------------------ */
+.dropzone { border: 2px dashed #adb5bd; border-radius: 8px; padding: 0.75rem; background: #fff; transition: background 0.15s; }
+.dropzone.dragover { background: #e7f1ff; border-color: #0d6efd; }
+.dropzone-file { font-size: 0.8rem; color: #0d6efd; }
+.score-band { font-size: 0.75rem; color: #6c757d; }
+.kpi { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.kpi-label { font-size: 0.75rem; text-transform: uppercase; color: #6c757d; letter-spacing: 0.03em; }
+.tier-key { color: #b71c1c; font-weight: 700; }
+.tier-green { color: #2e7d32; font-weight: 600; }
+.tier-blue { color: #1565c0; }
+.attr-bar { height: 6px; background: #e9ecef; border-radius: 3px; overflow: hidden; }
+.attr-bar > span { display: block; height: 100%; background: #0d6efd; }
+.reason { font-size: 0.85rem; white-space: normal !important; max-width: 520px; }
+table.dataTable td.wrap { white-space: normal; }
+.badge-scout { background: #fff3cd; color: #664d03; border: 1px solid #ffe69c; }
+@media print { nav, .state-bar, #quickSettings, .no-print { display: none !important; } }
+.slot-editor .slot-row select { min-width: 8rem; }

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% set nav = "registration" %}
+{% block title %}Registration · FM Planner{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-baseline gap-3 mb-2">
+    <h1 class="h3 mb-0">Squad registration</h1>
+    <span class="text-muted small">Best {{ reg.max_squad }}-man list that meets the home-grown quota. HGN comes from <em>Home-Grown Status</em>; U21 exemption from date of birth and the detected season ({{ season.label or "unknown" }}{% if not season.confident %} — low confidence{% endif %}).</span>
+</div>
+
+<form class="card mb-3" method="post" action="/settings">
+    <input type="hidden" name="next" value="/registration">
+    <div class="card-body py-2 row g-2 align-items-end small">
+        <div class="col-auto"><label class="form-label mb-0">Max registered</label><input class="form-control form-control-sm" name="max_squad" value="{{ settings.max_squad }}" style="width:6rem"></div>
+        <div class="col-auto"><label class="form-label mb-0">Min home-grown</label><input class="form-control form-control-sm" name="min_hgn" value="{{ settings.min_hgn }}" style="width:6rem"></div>
+        <div class="col-auto"><label class="form-label mb-0">U21 = age ≤ on 1 Jan</label><input class="form-control form-control-sm" name="u21_age" value="{{ settings.u21_age }}" style="width:6rem"></div>
+        <div class="col-auto"><button class="btn btn-primary btn-sm">Apply</button></div>
+        {% if not hdr.has_registration %}<div class="col text-muted">Tip: upload the Registration view to see status icons (Wnt, Inj, Int…).</div>{% endif %}
+    </div>
+</form>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="card"><div class="card-body py-2"><div class="kpi">{{ reg.registered|length }}<span class="fs-6 text-muted">/{{ reg.max_squad }}</span></div><div class="kpi-label">Registered</div></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body py-2"><div class="kpi {{ 'text-success' if reg.hgn_count >= reg.min_hgn else 'text-danger' }}">{{ reg.hgn_count }}<span class="fs-6 text-muted">/{{ reg.min_hgn }}</span></div><div class="kpi-label">Home-grown in list</div></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body py-2"><div class="kpi">{{ reg.u21_exempt|length }}</div><div class="kpi-label">U21 exempt (no slot needed)</div></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body py-2"><div class="kpi">{{ "%.1f"|format(reg.total_quality) }}</div><div class="kpi-label">Registered quality (sum best scores)</div></div></div></div>
+</div>
+
+{% for i in reg.issues %}<div class="alert alert-danger py-2">{{ i }}</div>{% endfor %}
+{% for w in reg.warnings %}<div class="alert alert-warning py-1 small">{{ w }}</div>{% endfor %}
+{% if reg.constraints_met and not reg.issues %}<div class="alert alert-success py-2">Constraints met — this list is legal and maximises quality.</div>{% endif %}
+
+{% macro ptable(players, show_reason=false) %}
+<table class="table table-sm small mb-0">
+    <thead><tr><th>Name</th><th>Age</th><th>Position</th><th>Best role</th><th>Score</th><th>HG status</th><th>U21</th><th>Statuses</th><th>Value</th><th>Wage</th></tr></thead>
+    <tbody>{% for p in players %}
+    <tr>
+        <td><a data-player-source="squad" data-player-idx="{{ p.idx }}" data-player-name="{{ p.name }}" href="/player/squad/{{ p.idx }}">{{ p.name }}</a>{% if p.is_starter %} <span class="badge bg-success">XI</span>{% endif %}</td>
+        <td>{{ p.age }}</td><td>{{ p.position }}</td><td>{{ p.best_role }}</td><td>{{ "%.1f"|format(p.score) }}</td>
+        <td>{% if p.is_hgn %}<span class="badge bg-primary">{{ p.hg_status or "HG" }}</span>{% elif p.hg_status %}{{ p.hg_status }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+        <td>{% if not p.u21_known %}<span class="text-muted" title="No DoB">?</span>{% elif p.is_u21 %}<span class="badge bg-info text-dark">U21</span>{% endif %}</td>
+        <td>{% for s in p.statuses %}<span class="badge bg-light text-dark border">{{ s }}</span> {% endfor %}</td>
+        <td>{{ p.transfer_value }}</td><td>{{ p.wage }}</td>
+    </tr>{% endfor %}</tbody>
+</table>
+{% endmacro %}
+
+<div class="row g-3">
+    <div class="col-lg-6"><div class="card"><div class="card-header py-2"><strong>Registered ({{ reg.registered|length }})</strong></div>{{ ptable(reg.registered) }}</div></div>
+    <div class="col-lg-6">
+        <div class="card mb-3"><div class="card-header py-2"><strong>U21 exempt ({{ reg.u21_exempt|length }})</strong> <span class="text-muted small">— eligible without using a slot</span></div>{{ ptable(reg.u21_exempt) }}</div>
+        <div class="card mb-3"><div class="card-header py-2"><strong>Not registered ({{ reg.unregistered|length }})</strong> <span class="text-muted small">— consider loan or sale</span></div>{{ ptable(reg.unregistered) }}</div>
+        {% if reg.unknown_u21 %}<div class="card"><div class="card-header py-2"><strong>Unknown U21 status ({{ reg.unknown_u21|length }})</strong> <span class="text-muted small">— export DoB to resolve</span></div>{{ ptable(reg.unknown_u21) }}</div>{% endif %}
+    </div>
+</div>
+{% endblock %}

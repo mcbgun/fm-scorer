@@ -1,57 +1,94 @@
-"""Scoring engine: computes role scores from player attribute data."""
+"""Scoring engine: role scores (with confidence bounds), slot-aware Best 11 and
+upgrade detection.
 
-import re
+Assumptions
+-----------
+Attributes exported as ranges ("12-16") carry ``_lo`` / ``_hi`` columns (see
+``parser.add_confidence_columns``). Every scoring function accepts an
+``assumption``:
+
+- ``"mid"``  - midpoint of each range (headline score)
+- ``"low"``  - conservative (every unknown resolves to its lower bound)
+- ``"high"`` - optimistic
+"""
 
 import pandas as pd
 
+from assignment import INCOMPATIBLE, assign_slots
+from money import parse_value_high
+from positions import position_familiarity
+from profiles import Profile, apply_profile
 from roles import ROLES, RoleDef
-from profiles import PROFILES, Profile, apply_profile
-from positions import player_can_play_role
+
+ASSUMPTIONS = ("low", "mid", "high")
+FAMILIARITY_SUFFIX = "__fam"
 
 
-def score_role(df: pd.DataFrame, role: RoleDef) -> pd.Series:
-    """Compute a single role score for all players in the dataframe.
+def _attr_frame(df: pd.DataFrame, attrs, assumption: str) -> list[pd.Series]:
+    suffix = {"low": "_lo", "high": "_hi"}.get(assumption, "")
+    out = []
+    for a in attrs:
+        col = f"{a}{suffix}" if suffix and f"{a}{suffix}" in df.columns else a
+        out.append(pd.to_numeric(df[col], errors="coerce").fillna(0.0) if col in df.columns else pd.Series(0.0, index=df.index))
+    return out
 
-    Args:
-        df: DataFrame with player attribute columns (Acc, Pac, Sta, etc.)
-        role: RoleDef with key/green/blue attribute lists
 
-    Returns:
-        Series of rounded role scores
-    """
+def score_role(df: pd.DataFrame, role: RoleDef, assumption: str = "mid") -> pd.Series:
+    """Compute a single role score for all players in the dataframe."""
     denom = role.denominator
-    if denom == 0:
-        return pd.Series([0.0] * len(df), index=df.index)
-    key_sum = sum(df[attr] for attr in role.key)
-    green_sum = sum(df[attr] for attr in role.green)
-    blue_sum = sum(df[attr] for attr in role.blue)
+    if denom == 0 or len(df) == 0:
+        return pd.Series([0.0] * len(df), index=df.index, dtype=float)
+    key_sum = sum(_attr_frame(df, role.key, assumption), pd.Series(0.0, index=df.index))
+    green_sum = sum(_attr_frame(df, role.green, assumption), pd.Series(0.0, index=df.index))
+    blue_sum = sum(_attr_frame(df, role.blue, assumption), pd.Series(0.0, index=df.index))
     score = (key_sum * 5 + green_sum * 3 + blue_sum * 1) / denom
-    return score.round(1)
+    return score.round(2)
 
 
 def score_all_roles(
     df: pd.DataFrame,
     selected_role_ids: list[str],
     profile: Profile,
+    assumption: str = "mid",
+    with_bounds: bool = False,
 ) -> pd.DataFrame:
     """Score all selected roles for all players.
 
-    Args:
-        df: DataFrame with player attributes + info columns
-        selected_role_ids: list of role IDs to score
-        profile: weighting profile to apply
-
-    Returns:
-        DataFrame with original info columns + one column per selected role
+    Adds one column per role id. With ``with_bounds`` also adds ``<role>_lo`` /
+    ``<role>_hi`` columns (conservative / optimistic scores).
     """
     result = df.copy()
-
+    new_cols: dict[str, pd.Series] = {}
     for role_id in selected_role_ids:
-        base_role = ROLES[role_id]
-        role = apply_profile(base_role, profile)
-        result[role_id] = score_role(df, role)
-
+        if role_id not in ROLES:
+            continue
+        role = apply_profile(ROLES[role_id], profile)
+        new_cols[role_id] = score_role(df, role, assumption)
+        if with_bounds:
+            new_cols[f"{role_id}_lo"] = score_role(df, role, "low")
+            new_cols[f"{role_id}_hi"] = score_role(df, role, "high")
+    if new_cols:
+        result = result.drop(columns=[c for c in new_cols if c in result.columns])
+        result = pd.concat([result, pd.DataFrame(new_cols, index=df.index)], axis=1)
     return result
+
+
+def score_breakdown(row: pd.Series, role: RoleDef) -> dict:
+    """Per-tier contribution for one player and one (profile-applied) role."""
+    tiers = {}
+    for tier, attrs, w in (("key", role.key, 5), ("green", role.green, 3), ("blue", role.blue, 1)):
+        items = []
+        for a in attrs:
+            val = float(row.get(a, 0) or 0)
+            lo = float(row.get(f"{a}_lo", val) or 0)
+            hi = float(row.get(f"{a}_hi", val) or 0)
+            items.append({"attr": a, "value": val, "lo": lo, "hi": hi, "weight": w})
+        tiers[tier] = {"weight": w, "attrs": items, "avg": round(sum(i["value"] for i in items) / len(items), 1) if items else 0.0}
+    denom = role.denominator or 1
+    total = sum(i["value"] * i["weight"] for t in tiers.values() for i in t["attrs"]) / denom
+    lo = sum(i["lo"] * i["weight"] for t in tiers.values() for i in t["attrs"]) / denom
+    hi = sum(i["hi"] * i["weight"] for t in tiers.values() for i in t["attrs"]) / denom
+    return {"role_id": role.id, "role_name": role.name, "score": round(total, 1), "lo": round(lo, 1), "hi": round(hi, 1), "tiers": tiers}
 
 
 def compute_derived_stats(df: pd.DataFrame) -> pd.DataFrame:
@@ -63,24 +100,104 @@ def compute_derived_stats(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def get_best_role_per_player(
-    df: pd.DataFrame,
-    selected_role_ids: list[str],
-    profile: Profile,
-) -> pd.DataFrame:
+def get_best_role_per_player(df: pd.DataFrame, selected_role_ids: list[str], profile: Profile) -> pd.DataFrame:
     """Add 'Highest Role Score' and 'Resulting Role' columns."""
-    scored = score_all_roles(df, selected_role_ids, profile)
-    if not selected_role_ids:
+    scored = score_all_roles(df, selected_role_ids, profile, with_bounds=True)
+    valid = [r for r in selected_role_ids if r in scored.columns]
+    if not valid:
         scored["Highest Role Score"] = None
         scored["Resulting Role"] = ""
         return scored
-
-    role_cols = scored[selected_role_ids]
+    role_cols = scored[valid]
     scored["Highest Role Score"] = role_cols.max(axis=1).round(1)
     best_idx = role_cols.idxmax(axis=1)
     scored["Resulting Role"] = best_idx.map(lambda rid: ROLES[rid].name)
-
+    scored["Score Low"] = pd.Series([scored.at[i, f"{r}_lo"] for i, r in best_idx.items()], index=scored.index).round(1)
+    scored["Score High"] = pd.Series([scored.at[i, f"{r}_hi"] for i, r in best_idx.items()], index=scored.index).round(1)
     return scored
+
+
+# --------------------------------------------------------------------------- #
+# Slot-aware assignment
+# --------------------------------------------------------------------------- #
+
+
+def familiarity_matrix(df: pd.DataFrame, slots: list[dict], wrong_flank: float | None = None) -> dict[int, pd.Series]:
+    """{slot_idx: Series(familiarity per player)} — vectorised over unique
+    position strings so 16k targets x 11 slots stays fast."""
+    pos_col = df["Position"].astype(str) if "Position" in df.columns else pd.Series([""] * len(df), index=df.index)
+    uniques = pos_col.unique()
+    out: dict[int, pd.Series] = {}
+    kwargs = {} if wrong_flank is None else {"wrong_flank": wrong_flank}
+    for i, slot in enumerate(slots):
+        lookup = {p: position_familiarity(p, slot["role"], slot["pos"], **kwargs) for p in uniques}
+        out[i] = pos_col.map(lookup).astype(float)
+    return out
+
+
+def get_best_11(
+    squad_df: pd.DataFrame,
+    formation: list[dict],
+    profile: Profile,
+    assumption: str = "mid",
+    exclude_idx: set | None = None,
+    wrong_flank: float | None = None,
+    scored: pd.DataFrame | None = None,
+) -> list[dict]:
+    """Assign squad players to formation slots with a globally optimal
+    (Hungarian) matching, respecting the *side* of each slot.
+
+    Slot score = role score x positional familiarity. Returns one dict per slot
+    (in formation order); unfilled slots have ``player_name="(no one)"``.
+    """
+    unique_role_ids = list({slot["role"] for slot in formation})
+    if scored is None:
+        scored = score_all_roles(squad_df, unique_role_ids, profile, assumption, with_bounds=True)
+    if exclude_idx:
+        scored = scored.loc[[i for i in scored.index if i not in exclude_idx]]
+    name_col = scored["Name"] if "Name" in scored.columns else pd.Series(["?"] * len(scored), index=scored.index)
+    pos_col = scored["Position"].astype(str) if "Position" in scored.columns else pd.Series([""] * len(scored), index=scored.index)
+    fam = familiarity_matrix(scored, formation, wrong_flank)
+
+    role_scores = {rid: scored[rid] for rid in unique_role_ids if rid in scored.columns}
+
+    def slot_score(slot_idx, player_idx):
+        role_id = formation[slot_idx]["role"]
+        if role_id not in role_scores:
+            return INCOMPATIBLE
+        f = float(fam[slot_idx].loc[player_idx])
+        if f <= 0:
+            return INCOMPATIBLE
+        return float(role_scores[role_id].loc[player_idx]) * f
+
+    assignment = assign_slots(list(range(len(formation))), list(scored.index), slot_score)
+
+    results = []
+    for slot_idx, slot in enumerate(formation):
+        role_id = slot["role"]
+        player_idx, eff = assignment[slot_idx]
+        base = {"pos": slot["pos"], "role_id": role_id, "role_name": ROLES[role_id].name if role_id in ROLES else role_id}
+        if player_idx is None:
+            results.append({**base, "player_idx": -1, "player_name": "(no one)", "score": 0.0, "raw_score": 0.0,
+                            "score_lo": 0.0, "score_hi": 0.0, "familiarity": 0.0, "position": "", "needs_scouting": False})
+            continue
+        raw = float(role_scores[role_id].loc[player_idx])
+        lo_col, hi_col = f"{role_id}_lo", f"{role_id}_hi"
+        lo = float(scored.at[player_idx, lo_col]) if lo_col in scored.columns else raw
+        hi = float(scored.at[player_idx, hi_col]) if hi_col in scored.columns else raw
+        results.append({
+            **base,
+            "player_idx": int(player_idx),
+            "player_name": str(name_col.loc[player_idx]),
+            "score": round(eff, 1),
+            "raw_score": round(raw, 1),
+            "score_lo": round(lo, 1),
+            "score_hi": round(hi, 1),
+            "familiarity": float(fam[slot_idx].loc[player_idx]),
+            "position": str(pos_col.loc[player_idx]),
+            "needs_scouting": bool(scored.at[player_idx, "Needs Scouting"]) if "Needs Scouting" in scored.columns else False,
+        })
+    return results
 
 
 def get_squad_benchmarks(
@@ -88,92 +205,66 @@ def get_squad_benchmarks(
     selected_role_ids: list[str],
     profile: Profile,
     one_player_per_role: bool = True,
+    assumption: str = "mid",
 ) -> dict[str, dict]:
-    """Compute benchmark scores from the current squad for each role.
+    """Benchmark score per role from the current squad.
 
-    When one_player_per_role is True, each squad player is assigned to only
-    their single best role using a greedy maximum-weight assignment. This
-    prevents one player from being the benchmark for multiple roles.
-
-    Args:
-        squad_df: DataFrame of squad players with attributes
-        selected_role_ids: roles to benchmark
-        profile: weighting profile to apply
-        one_player_per_role: if True, each player only counts for one role
-
-    Returns:
-        {role_id: {"best_score": float, "best_player": str, "second_score": float}}
+    With ``one_player_per_role`` the squad is matched to roles with an optimal
+    assignment (each player counts for one role only); position compatibility
+    is always respected.
     """
-    scored = score_all_roles(squad_df, selected_role_ids, profile)
-    name_col = scored.get("Name", pd.Series(["?"] * len(scored)))
+    scored = score_all_roles(squad_df, selected_role_ids, profile, assumption)
+    valid = [r for r in selected_role_ids if r in scored.columns]
+    name_col = scored["Name"] if "Name" in scored.columns else pd.Series(["?"] * len(scored), index=scored.index)
+    pseudo_slots = [{"pos": "", "role": r} for r in valid]
+    fam = familiarity_matrix(scored, pseudo_slots)
 
+    benchmarks: dict[str, dict] = {}
     if not one_player_per_role:
-        # Original behavior: each role independently finds its best player
-        benchmarks = {}
-        for role_id in selected_role_ids:
-            if role_id not in scored.columns:
+        for i, role_id in enumerate(valid):
+            eligible = scored[role_id].where(fam[i] > 0, -1.0).sort_values(ascending=False)
+            if eligible.empty or eligible.iloc[0] < 0:
+                benchmarks[role_id] = {"best_score": 0.0, "best_player": "(no one)", "second_score": 0.0}
                 continue
-            role_scores = scored[role_id]
-            sorted_idx = role_scores.sort_values(ascending=False).index
-            best_score = float(role_scores.loc[sorted_idx[0]])
-            best_player = str(name_col.loc[sorted_idx[0]])
-            second_score = float(role_scores.loc[sorted_idx[1]]) if len(sorted_idx) > 1 else 0.0
-            benchmarks[role_id] = {
-                "best_score": best_score,
-                "best_player": best_player,
-                "second_score": second_score,
-            }
+            second = float(eligible.iloc[1]) if len(eligible) > 1 and eligible.iloc[1] >= 0 else 0.0
+            benchmarks[role_id] = {"best_score": float(eligible.iloc[0]), "best_player": str(name_col.loc[eligible.index[0]]), "second_score": second}
         return benchmarks
 
-    # Greedy one-player-per-role assignment:
-    # 1. Build all (player_idx, role_id, score) tuples
-    # 2. Sort by score descending
-    # 3. Assign greedily — skip if player or role already taken
-    assignments: list[tuple[int, str, float]] = []
-    for role_id in selected_role_ids:
-        if role_id not in scored.columns:
+    def slot_score(slot_idx, player_idx):
+        f = float(fam[slot_idx].loc[player_idx])
+        return INCOMPATIBLE if f <= 0 else float(scored.at[player_idx, valid[slot_idx]])
+
+    assignment = assign_slots(list(range(len(valid))), list(scored.index), slot_score)
+    for i, role_id in enumerate(valid):
+        player_idx, score = assignment[i]
+        if player_idx is None:
+            benchmarks[role_id] = {"best_score": 0.0, "best_player": "(unassigned)", "second_score": 0.0}
             continue
-        for idx in scored.index:
-            assignments.append((idx, role_id, float(scored.at[idx, role_id])))
-
-    assignments.sort(key=lambda x: x[2], reverse=True)
-
-    assigned_players: set[int] = set()
-    assigned_roles: set[str] = set()
-    role_assignment: dict[str, tuple[int, float]] = {}
-
-    for player_idx, role_id, score in assignments:
-        if player_idx in assigned_players or role_id in assigned_roles:
-            continue
-        role_assignment[role_id] = (player_idx, score)
-        assigned_players.add(player_idx)
-        assigned_roles.add(role_id)
-        if len(assigned_roles) == len(selected_role_ids):
-            break
-
-    # Build benchmarks from assignments, find second-best (excluding assigned player)
-    benchmarks = {}
-    for role_id in selected_role_ids:
-        if role_id not in scored.columns:
-            continue
-        if role_id in role_assignment:
-            player_idx, best_score = role_assignment[role_id]
-            best_player = str(name_col.loc[player_idx])
-            # Second best: highest score among non-assigned players
-            other_scores = scored.loc[scored.index != player_idx, role_id]
-            second_score = float(other_scores.max()) if len(other_scores) > 0 else 0.0
-        else:
-            # No player assigned to this role (not enough squad players)
-            best_score = 0.0
-            best_player = "(unassigned)"
-            second_score = 0.0
+        others = scored.loc[(scored.index != player_idx) & (fam[i] > 0), role_id]
         benchmarks[role_id] = {
-            "best_score": best_score,
-            "best_player": best_player,
-            "second_score": second_score,
+            "best_score": round(float(score), 1),
+            "best_player": str(name_col.loc[player_idx]),
+            "second_score": round(float(others.max()), 1) if len(others) else 0.0,
         }
-
     return benchmarks
+
+
+def get_formation_benchmarks(squad_df: pd.DataFrame, formation: list[dict], profile: Profile, assumption: str = "mid") -> list[dict]:
+    return get_best_11(squad_df, formation, profile, assumption)
+
+
+def _apply_common_filters(scored: pd.DataFrame, max_age: int, max_value: str, exclude_unscouted: bool) -> pd.DataFrame:
+    if "Age" in scored.columns:
+        scored = scored.assign(Age=pd.to_numeric(scored["Age"], errors="coerce").fillna(99))
+        scored = scored[scored["Age"] <= max_age]
+    if max_value and "Transfer Value" in scored.columns:
+        max_val_num = parse_value_high(max_value)
+        if max_val_num > 0:
+            vals = scored["Transfer Value"].apply(parse_value_high)
+            scored = scored[vals <= max_val_num]
+    if exclude_unscouted and "Needs Scouting" in scored.columns:
+        scored = scored[~scored["Needs Scouting"].astype(bool)]
+    return scored
 
 
 def filter_upgrades(
@@ -187,221 +278,41 @@ def filter_upgrades(
     require_strict_upgrade: bool = True,
     position_mode: str = "can_play",
     one_player_per_role: bool = True,
+    assumption: str = "mid",
+    exclude_unscouted: bool = False,
 ) -> pd.DataFrame:
-    """Filter transfer targets to show only upgrades over the current squad.
-
-    For each target player, compares their best role score against the squad's
-    best score for that same role. Only includes players who improve on the
-    squad benchmark by at least min_margin.
-
-    Args:
-        targets_df: DataFrame of transfer target players
-        squad_df: DataFrame of current squad players
-        selected_role_ids: roles to evaluate
-        profile: weighting profile to apply
-        min_margin: minimum score improvement over squad best (e.g. 0.5)
-        max_age: exclude players older than this
-        max_value: exclude players with transfer value above this (string like "50M")
-        require_strict_upgrade: if True, target must beat squad best (not just equal)
-        position_mode: "any" (no filter), "can_play" (only players who can play
-            the role's position), "cannot_play" (only players who'd need training)
-        one_player_per_role: if True, squad benchmarks assign each player to one role
-
-    Returns:
-        DataFrame of upgrade targets with upgrade columns added
-    """
+    """Role-based (no formation) upgrade search."""
     benchmarks = get_squad_benchmarks(squad_df, selected_role_ids, profile, one_player_per_role)
-    scored = score_all_roles(targets_df, selected_role_ids, profile)
-
-    if not selected_role_ids:
+    scored = score_all_roles(targets_df, selected_role_ids, profile, assumption, with_bounds=True)
+    valid = [r for r in selected_role_ids if r in scored.columns]
+    if not valid:
         return scored
 
-    # Position filtering: mask each player's role scores based on position_mode
-    pos_col = scored.get("Position", pd.Series([""] * len(scored)))
-    if position_mode == "can_play":
-        for role_id in selected_role_ids:
-            mask = pos_col.apply(lambda p: player_can_play_role(str(p), role_id))
-            scored.loc[~mask, role_id] = -999  # disqualify from being best role
-    elif position_mode == "cannot_play":
-        for role_id in selected_role_ids:
-            mask = pos_col.apply(lambda p: player_can_play_role(str(p), role_id))
-            scored.loc[mask, role_id] = -999  # disqualify from being best role
+    fam = familiarity_matrix(scored, [{"pos": "", "role": r} for r in valid])
+    eff = pd.DataFrame({r: scored[r] for r in valid})
+    for i, r in enumerate(valid):
+        if position_mode == "can_play":
+            eff[r] = eff[r].where(fam[i] > 0, -999.0)
+        elif position_mode == "cannot_play":
+            eff[r] = eff[r].where(fam[i] <= 0, -999.0)
 
-    role_cols = scored[selected_role_ids]
-    # Find each target's best eligible role
-    scored["Target Best Score"] = role_cols.max(axis=1).round(1)
-    best_role_id = role_cols.idxmax(axis=1)
+    scored["Target Best Score"] = eff.max(axis=1).round(1)
+    best_role_id = eff.idxmax(axis=1)
     scored["Target Best Role"] = best_role_id.map(lambda rid: ROLES[rid].name)
     scored["Target Best Role ID"] = best_role_id
-
-    # Squad benchmark for each player's best role
-    scored["Squad Best Score"] = best_role_id.map(
-        lambda rid: benchmarks.get(rid, {}).get("best_score", 0.0)
-    )
-    scored["Squad Best Player"] = best_role_id.map(
-        lambda rid: benchmarks.get(rid, {}).get("best_player", "")
-    )
+    scored["Score Low"] = pd.Series([scored.at[i, f"{r}_lo"] for i, r in best_role_id.items()], index=scored.index).round(1)
+    scored["Score High"] = pd.Series([scored.at[i, f"{r}_hi"] for i, r in best_role_id.items()], index=scored.index).round(1)
+    scored["Squad Best Score"] = best_role_id.map(lambda rid: benchmarks.get(rid, {}).get("best_score", 0.0))
+    scored["Squad Best Player"] = best_role_id.map(lambda rid: benchmarks.get(rid, {}).get("best_player", ""))
     scored["Upgrade Margin"] = (scored["Target Best Score"] - scored["Squad Best Score"]).round(1)
+    scored["Margin Low"] = (scored["Score Low"] - scored["Squad Best Score"]).round(1)
 
-    # Filter: must be an upgrade (and not disqualified by position)
     if require_strict_upgrade:
         mask = (scored["Upgrade Margin"] > min_margin) & (scored["Target Best Score"] > 0)
     else:
         mask = (scored["Upgrade Margin"] >= min_margin) & (scored["Target Best Score"] > 0)
-    scored = scored[mask]
-
-    # Filter: age
-    if "Age" in scored.columns:
-        scored["Age"] = pd.to_numeric(scored["Age"], errors="coerce").fillna(99)
-        scored = scored[scored["Age"] <= max_age]
-
-    # Filter: transfer value
-    if max_value and "Transfer Value" in scored.columns:
-        max_val_num = _parse_value_string(max_value)
-        if max_val_num > 0:
-            scored["_value_num"] = scored["Transfer Value"].apply(_parse_value_string)
-            scored = scored[scored["_value_num"] <= max_val_num]
-            scored = scored.drop(columns=["_value_num"])
-
-    scored = scored.sort_values("Upgrade Margin", ascending=False)
-    return scored
-
-
-def _parse_value_string(val: str) -> float:
-    """Parse an FM24 transfer value string into a numeric (in millions).
-
-    Handles formats like "£34M - £55M", "£7.5K", "£1.2M", "-", "".
-    Returns the upper bound in millions (e.g. "£34M - £55M" -> 55.0).
-    """
-    if not val or pd.isna(val):
-        return 0.0
-    s = str(val).strip()
-    if s == "-" or s == "":
-        return 0.0
-
-    matches = re.findall(r"[\$£€]?([\d.,]+)\s*([KMB]?)", s)
-    values = []
-    for num_str, unit in matches:
-        try:
-            num = float(num_str.replace(",", ""))
-            if unit == "K":
-                num /= 1000
-            elif unit == "B":
-                num *= 1000
-            values.append(num)
-        except ValueError:
-            continue
-
-    if not values:
-        return 0.0
-    return max(values)
-
-
-def get_best_11(
-    squad_df: pd.DataFrame,
-    formation: list[dict],
-    profile: Profile,
-) -> list[dict]:
-    """Assign squad players to formation slots using greedy max-weight matching.
-
-    A formation is a list of slots, each with a position label and role_id.
-    The same role_id can appear in multiple slots (e.g. two WBA slots).
-    Each player is assigned to at most one slot.
-
-    Args:
-        squad_df: DataFrame of squad players with attributes
-        formation: List of {"pos": "GK", "role": "sks"} dicts
-        profile: weighting profile to apply
-
-    Returns:
-        List of {"pos", "role_id", "role_name", "player_idx", "player_name",
-        "score", "position"} dicts, one per slot. Unfilled slots have
-        player_name="(no one)" and score=0.0.
-    """
-    unique_role_ids = list({slot["role"] for slot in formation})
-    scored = score_all_roles(squad_df, unique_role_ids, profile)
-    name_col = scored.get("Name", pd.Series(["?"] * len(scored)))
-    pos_col = scored.get("Position", pd.Series([""] * len(scored)))
-
-    # Build all (player_idx, slot_index, score) candidates
-    # Only include players who can play the slot's role position
-    candidates: list[tuple[int, int, float]] = []
-    for slot_idx, slot in enumerate(formation):
-        role_id = slot["role"]
-        if role_id not in scored.columns:
-            continue
-        for player_idx in scored.index:
-            player_pos = str(pos_col.loc[player_idx])
-            if not player_can_play_role(player_pos, role_id):
-                continue
-            score = float(scored.at[player_idx, role_id])
-            candidates.append((player_idx, slot_idx, score))
-
-    # Sort by score descending — assign greedily
-    candidates.sort(key=lambda x: x[2], reverse=True)
-
-    assigned_players: set[int] = set()
-    assigned_slots: set[int] = set()
-    slot_assignment: dict[int, tuple[int, float]] = {}
-
-    for player_idx, slot_idx, score in candidates:
-        if player_idx in assigned_players or slot_idx in assigned_slots:
-            continue
-        slot_assignment[slot_idx] = (player_idx, score)
-        assigned_players.add(player_idx)
-        assigned_slots.add(slot_idx)
-        if len(assigned_slots) == len(formation):
-            break
-
-    # Build result
-    results = []
-    for slot_idx, slot in enumerate(formation):
-        role_id = slot["role"]
-        if slot_idx in slot_assignment:
-            player_idx, score = slot_assignment[slot_idx]
-            results.append({
-                "pos": slot["pos"],
-                "role_id": role_id,
-                "role_name": ROLES[role_id].name,
-                "player_idx": player_idx,
-                "player_name": str(name_col.loc[player_idx]),
-                "score": score,
-                "position": str(pos_col.loc[player_idx]),
-            })
-        else:
-            results.append({
-                "pos": slot["pos"],
-                "role_id": role_id,
-                "role_name": ROLES[role_id].name,
-                "player_idx": -1,
-                "player_name": "(no one)",
-                "score": 0.0,
-                "position": "",
-            })
-
-    return results
-
-
-def get_formation_benchmarks(
-    squad_df: pd.DataFrame,
-    formation: list[dict],
-    profile: Profile,
-) -> list[dict]:
-    """Get per-slot benchmarks from the Best 11 assignment.
-
-    Each slot's benchmark is the player assigned to it in the Best 11.
-    Used for upgrade comparison — a target is an upgrade for a slot if
-    their score for that slot's role beats the assigned player's score.
-
-    Args:
-        squad_df: DataFrame of squad players
-        formation: List of {"pos": "GK", "role": "sks"} dicts
-        profile: weighting profile
-
-    Returns:
-        List of benchmark dicts with slot info + assigned player + score
-    """
-    return get_best_11(squad_df, formation, profile)
+    scored = _apply_common_filters(scored[mask], max_age, max_value, exclude_unscouted)
+    return scored.sort_values("Upgrade Margin", ascending=False)
 
 
 def filter_formation_upgrades(
@@ -413,95 +324,73 @@ def filter_formation_upgrades(
     max_age: int = 99,
     max_value: str = "",
     position_mode: str = "can_play",
+    assumption: str = "mid",
+    exclude_unscouted: bool = False,
+    benchmarks: list[dict] | None = None,
 ) -> pd.DataFrame:
-    """Find transfer targets who upgrade any formation slot.
+    """Find transfer targets who upgrade any formation slot (side-aware).
 
-    For each target, finds the formation slot where they'd provide the
-    largest upgrade over the current Best 11 player in that slot.
-
-    Args:
-        targets_df: DataFrame of transfer targets
-        squad_df: DataFrame of current squad
-        formation: List of {"pos", "role"} slot dicts
-        profile: weighting profile
-        min_margin: minimum upgrade margin
-        max_age: max age filter
-        max_value: max transfer value filter
-        position_mode: "any", "can_play", or "cannot_play"
-
-    Returns:
-        DataFrame of upgrade targets sorted by best upgrade margin
+    For each target the slot with the largest ``score x familiarity -
+    incumbent`` margin is reported, together with the conservative margin
+    (``Margin Low``) so partially-scouted players are not over-sold.
     """
-    benchmarks = get_formation_benchmarks(squad_df, formation, profile)
+    if benchmarks is None:
+        benchmarks = get_best_11(squad_df, formation, profile, assumption)
     unique_role_ids = list({slot["role"] for slot in formation})
-    scored = score_all_roles(targets_df, unique_role_ids, profile)
-
-    if not unique_role_ids:
+    scored = score_all_roles(targets_df, unique_role_ids, profile, assumption, with_bounds=True)
+    if not unique_role_ids or scored.empty:
         return scored
 
-    # Position filtering
-    pos_col = scored.get("Position", pd.Series([""] * len(scored)))
-    if position_mode == "can_play":
-        for role_id in unique_role_ids:
-            mask = pos_col.apply(lambda p: player_can_play_role(str(p), role_id))
-            scored.loc[~mask, role_id] = -999
-    elif position_mode == "cannot_play":
-        for role_id in unique_role_ids:
-            mask = pos_col.apply(lambda p: player_can_play_role(str(p), role_id))
-            scored.loc[mask, role_id] = -999
-
-    # For each target, find the best slot to upgrade
-    # A slot is defined by (pos, role_id, benchmark_score, benchmark_player)
-    best_upgrade_score = pd.Series([-999.0] * len(scored), index=scored.index)
-    best_upgrade_margin = pd.Series([-999.0] * len(scored), index=scored.index)
-    best_upgrade_slot = pd.Series([""] * len(scored), index=scored.index)
-    best_upgrade_role = pd.Series([""] * len(scored), index=scored.index)
-    best_upgrade_pos = pd.Series([""] * len(scored), index=scored.index)
-    squad_player_beaten = pd.Series([""] * len(scored), index=scored.index)
+    fam = familiarity_matrix(scored, formation)
+    n = len(scored)
+    best_score = pd.Series(-999.0, index=scored.index)
+    best_margin = pd.Series(-999.0, index=scored.index)
+    best_lo = pd.Series(0.0, index=scored.index)
+    best_hi = pd.Series(0.0, index=scored.index)
+    best_slot = pd.Series([""] * n, index=scored.index)
+    best_role = pd.Series([""] * n, index=scored.index)
+    best_pos = pd.Series([""] * n, index=scored.index)
+    beaten = pd.Series([""] * n, index=scored.index)
+    best_fam = pd.Series(0.0, index=scored.index)
 
     for slot_idx, bm in enumerate(benchmarks):
         role_id = bm["role_id"]
         if role_id not in scored.columns:
             continue
-        bm_score = bm["score"]
-        bm_player = bm["player_name"]
-        slot_pos = bm["pos"]
+        f = fam[slot_idx]
+        if position_mode == "can_play":
+            eligible = f > 0
+        elif position_mode == "cannot_play":
+            eligible = f <= 0
+            f = pd.Series(1.0, index=scored.index)
+        else:
+            eligible = pd.Series(True, index=scored.index)
+            f = f.where(f > 0, 1.0)
+        eff = scored[role_id] * f
+        margins = (eff - bm["score"]).where(eligible, -999.0)
+        better = margins > best_margin
+        best_score = best_score.where(~better, eff.round(1))
+        best_margin = best_margin.where(~better, margins)
+        best_lo = best_lo.where(~better, (scored[f"{role_id}_lo"] * f).round(1))
+        best_hi = best_hi.where(~better, (scored[f"{role_id}_hi"] * f).round(1))
+        best_fam = best_fam.where(~better, f)
+        best_slot = best_slot.where(~better, f"{bm['pos']} ({role_id})")
+        best_role = best_role.where(~better, ROLES[role_id].name)
+        best_pos = best_pos.where(~better, bm["pos"])
+        beaten = beaten.where(~better, bm["player_name"])
 
-        margins = scored[role_id] - bm_score
-        # This slot is the best upgrade for a target if margin > their current best
-        is_better = margins > best_upgrade_margin
-        for idx in scored.index:
-            if is_better.loc[idx] and scored.at[idx, role_id] > 0:
-                best_upgrade_score.loc[idx] = scored.at[idx, role_id]
-                best_upgrade_margin.loc[idx] = margins.loc[idx]
-                best_upgrade_slot.loc[idx] = f"{slot_pos} ({role_id})"
-                best_upgrade_role.loc[idx] = ROLES[role_id].name
-                best_upgrade_pos.loc[idx] = slot_pos
-                squad_player_beaten.loc[idx] = bm_player
+    bm_by_pos = {bm["pos"]: bm["score"] for bm in benchmarks}
+    scored["Target Best Score"] = best_score.round(1)
+    scored["Score Low"] = best_lo
+    scored["Score High"] = best_hi
+    scored["Upgrade Margin"] = best_margin.round(1)
+    scored["Margin Low"] = (best_lo - best_pos.map(bm_by_pos).fillna(0.0)).round(1)
+    scored["Familiarity"] = best_fam.round(2)
+    scored["Upgrade Slot"] = best_slot
+    scored["Upgrade Position"] = best_pos
+    scored["Upgrade Role"] = best_role
+    scored["Squad Player Beaten"] = beaten
 
-    scored["Target Best Score"] = best_upgrade_score.round(1)
-    scored["Upgrade Margin"] = best_upgrade_margin.round(1)
-    scored["Upgrade Slot"] = best_upgrade_slot
-    scored["Upgrade Position"] = best_upgrade_pos
-    scored["Upgrade Role"] = best_upgrade_role
-    scored["Squad Player Beaten"] = squad_player_beaten
-
-    # Filter: must be an upgrade
     mask = (scored["Upgrade Margin"] > min_margin) & (scored["Target Best Score"] > 0)
-    scored = scored[mask]
-
-    # Filter: age
-    if "Age" in scored.columns:
-        scored["Age"] = pd.to_numeric(scored["Age"], errors="coerce").fillna(99)
-        scored = scored[scored["Age"] <= max_age]
-
-    # Filter: transfer value
-    if max_value and "Transfer Value" in scored.columns:
-        max_val_num = _parse_value_string(max_value)
-        if max_val_num > 0:
-            scored["_value_num"] = scored["Transfer Value"].apply(_parse_value_string)
-            scored = scored[scored["_value_num"] <= max_val_num]
-            scored = scored.drop(columns=["_value_num"])
-
-    scored = scored.sort_values("Upgrade Margin", ascending=False)
-    return scored
+    scored = _apply_common_filters(scored[mask], max_age, max_value, exclude_unscouted)
+    return scored.sort_values("Upgrade Margin", ascending=False)

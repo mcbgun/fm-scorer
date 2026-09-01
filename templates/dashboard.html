@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% set nav = "dashboard" %}
+{% block title %}Dashboard · {{ hdr.club }}{% endblock %}
+{% block content %}
+{% set weak_idx = d.weak_slots|map(attribute="slot_idx")|list %}
+<div class="d-flex flex-wrap align-items-baseline gap-3 mb-3">
+    <h1 class="h3 mb-0">{{ hdr.club or "Your squad" }} <span class="text-muted fs-6">{{ hdr.season }}</span></h1>
+    <span class="text-muted">What should I do this window?</span>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-2"><div class="card h-100"><div class="card-body py-2"><div class="kpi">{{ "%.1f"|format(d.average_quality) }}</div><div class="kpi-label">Best XI avg score</div></div></div></div>
+    <div class="col-6 col-md-2"><div class="card h-100"><div class="card-body py-2"><div class="kpi">{{ d.squad_size }}</div><div class="kpi-label">Players · {{ d.registration.hgn_count if d.registration else "?" }} HGN</div></div></div></div>
+    <div class="col-6 col-md-2"><div class="card h-100"><div class="card-body py-2"><div class="kpi">{{ d.wage_bill|wage }}</div><div class="kpi-label">Wage bill p/w</div></div></div></div>
+    <div class="col-6 col-md-2"><div class="card h-100"><div class="card-body py-2"><div class="kpi {{ 'text-danger' if d.depth_alerts else 'text-success' }}">{{ d.depth_alerts|length }}</div><div class="kpi-label">Slots with thin cover</div></div></div></div>
+    <div class="col-6 col-md-2"><div class="card h-100"><div class="card-body py-2"><div class="kpi {{ 'text-danger' if d.registration and d.registration.issues else 'text-success' }}">{{ d.registration.issues|length if d.registration else 0 }}</div><div class="kpi-label">Registration issues</div></div></div></div>
+    <div class="col-6 col-md-2"><div class="card h-100"><div class="card-body py-2"><div class="kpi">{{ hdr.budget_label }}</div><div class="kpi-label">Transfer budget{% if hdr.transfer_budget is none %} <a href="#quickSettings" data-bs-toggle="collapse" class="text-decoration-none">set →</a>{% endif %}</div></div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center"><strong>Best XI</strong><span class="small text-muted">{{ hdr.formation.name }} · <a href="/squad">depth chart</a></span></div>
+            <div class="card-body p-2">
+                {% with lineup=d.lineup, weak_idx=weak_idx %}{% include "_pitch.html" %}{% endwith %}
+                <div class="small text-muted mt-2">Red chip = weakest slots · yellow border = thin cover · <code>?</code> = partially scouted. Click a player for details.</div>
+            </div>
+        </div>
+        {% if d.depth_alerts %}
+        <div class="card mb-3">
+            <div class="card-header py-2"><strong>Depth alerts</strong></div>
+            <ul class="list-group list-group-flush small">
+                {% for al in d.depth_alerts %}
+                <li class="list-group-item py-1"><span class="badge bg-{{ 'danger' if al.status == 'critical' else 'warning text-dark' }}">{{ al.status }}</span> <strong>{{ al.label }}</strong>:
+                    {% if al.backup %}best backup {{ al.backup.name }} ({{ "%.1f"|format(al.backup.score) }}), {{ al.n_backups }} compatible cover{% else %}no compatible backup in the squad{% endif %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-header py-2 d-flex justify-content-between"><strong>Weakest slots & top targets</strong><a class="small" href="/compare">all targets →</a></div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0 small align-middle">
+                    <thead><tr><th>Slot</th><th>Current starter</th><th>Score</th><th>Top upgrade targets (margin vs starter · conservative margin)</th></tr></thead>
+                    <tbody>
+                    {% for w in d.weak_slots %}
+                    <tr>
+                        <td><strong>{{ w.pos }}</strong><br><span class="text-muted">{{ w.label.split(" — ")[1] if " — " in w.label else "" }}</span></td>
+                        <td>{{ w.starter }}</td>
+                        <td>{{ "%.1f"|format(w.score) }}</td>
+                        <td>
+                            {% if not hdr.has_targets %}<span class="text-muted">Upload a transfer-targets export to see candidates.</span>
+                            {% elif not w.targets %}<span class="text-muted">No target beats the incumbent{% if settings.exclude_unscouted %} (unscouted excluded){% endif %}.</span>
+                            {% else %}
+                            {% for t in w.targets %}
+                            <div class="d-flex gap-2 align-items-center">
+                                <a data-player-source="targets" data-player-idx="{{ t.idx }}" data-player-name="{{ t.name }}" href="/player/targets/{{ t.idx }}">{{ t.name }}</a>
+                                <span class="text-muted">{{ t.age }} · {{ t.club }}</span>
+                                <span class="badge bg-primary">{{ "%.1f"|format(t.score) }}</span>
+                                <span class="text-success">+{{ "%.1f"|format(t.margin) }}</span>
+                                {% if t.lo != t.hi %}<span class="score-band">({{ "%+.1f"|format(t.margin_lo) }} worst case)</span>{% endif %}
+                                <span class="text-muted">{{ t.value }}</span>
+                                {% if t.needs_scouting %}<span class="badge badge-scout">Scouting required</span>{% endif %}
+                                {% if t.shortlisted %}<span class="badge bg-warning text-dark">pinned</span>{% else %}
+                                <form method="post" action="/shortlist/add" class="d-inline"><input type="hidden" name="name" value="{{ t.name }}"><input type="hidden" name="source" value="target"><input type="hidden" name="next" value="/"><button class="btn btn-link btn-sm p-0">pin</button></form>{% endif %}
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header py-2 d-flex justify-content-between"><strong>Sell candidates</strong><a class="small" href="/sell">all →</a></div>
+                    <ul class="list-group list-group-flush small">
+                        {% for s in d.sell_top %}
+                        <li class="list-group-item py-1">
+                            <a data-player-source="squad" data-player-idx="{{ s._idx if s._idx is defined else s['_idx'] }}" data-player-name="{{ s.Name }}" href="/player/squad/{{ s._idx }}">{{ s.Name }}</a>
+                            <span class="text-muted">{{ s.Age }} · {{ s["Best Slot"] }} · {{ s["Transfer Value"] }}</span>
+                            <div class="text-muted">{{ s.Reason }}</div>
+                        </li>
+                        {% else %}<li class="list-group-item py-1 text-muted">Nobody flagged for sale.</li>{% endfor %}
+                        {% for s in d.loan_top[:3] %}
+                        <li class="list-group-item py-1"><span class="badge bg-info text-dark">Loan</span> <a data-player-source="squad" data-player-idx="{{ s._idx }}" data-player-name="{{ s.Name }}" href="/player/squad/{{ s._idx }}">{{ s.Name }}</a> <span class="text-muted">{{ s.Age }}</span><div class="text-muted">{{ s.Reason }}</div></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header py-2 d-flex justify-content-between"><strong>Top youth prospects</strong><a class="small" href="/youth">all →</a></div>
+                    <ul class="list-group list-group-flush small">
+                        {% for y in d.youth_top %}
+                        <li class="list-group-item py-1">
+                            <a data-player-source="squad" data-player-idx="{{ y.idx }}" data-player-name="{{ y.name }}" href="/player/squad/{{ y.idx }}">{{ y.name }}</a>
+                            <span class="text-muted">{{ y.age }} · {{ y.best_role }}</span>
+                            <span class="float-end">{{ "%.1f"|format(y.best_score) }} → <strong>{{ "%.1f"|format(y.potential) }}</strong> <span class="score-band">({{ "%.1f"|format(y.potential_lo) }}–{{ "%.1f"|format(y.potential_hi) }})</span></span>
+                        </li>
+                        {% else %}<li class="list-group-item py-1 text-muted">No players under {{ settings.max_youth_age }}.</li>{% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header py-2 d-flex justify-content-between"><strong>Registration</strong><a class="small" href="/registration">details →</a></div>
+                    <div class="card-body py-2 small">
+                        {% if d.registration %}
+                        <div>{{ d.registration.registered|length }} registered / max {{ d.registration.max_squad }} · {{ d.registration.hgn_count }} HGN (min {{ d.registration.min_hgn }}) · {{ d.registration.u21_exempt|length }} U21 exempt{% if d.registration.unknown_u21 %} · {{ d.registration.unknown_u21|length }} unknown{% endif %}</div>
+                        {% for i in d.registration.issues %}<div class="text-danger">⚠ {{ i }}</div>{% endfor %}
+                        {% for w in d.registration.warnings %}<div class="text-warning">{{ w }}</div>{% endfor %}
+                        {% if not d.registration.issues %}<div class="text-success">Constraints met with the current squad.</div>{% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header py-2 d-flex justify-content-between"><strong>Plan this window</strong><a class="small" href="/strategy">strategy →</a></div>
+                    <div class="card-body py-2 small">
+                        <p class="mb-1">The <a href="/strategy">Strategy</a> page builds a budget-aware buy/sell plan ranked by quality gained per £M{% if hdr.transfer_budget is none %} — <strong>set your transfer budget</strong> first or it will be funded by sales only{% endif %}.</p>
+                        {% if scenarios %}<p class="mb-1">Saved scenarios: {% for s in scenarios %}<a href="/scenarios">{{ s.name }}</a>{% if not loop.last %}, {% endif %}{% endfor %}.</p>{% else %}<p class="mb-1 text-muted">Pin targets, then compare Plan A vs Plan B under <a href="/scenarios">Scenarios</a>.</p>{% endif %}
+                        {% if d.unscouted_squad %}<p class="mb-0 text-warning">{{ d.unscouted_squad }} squad players have attribute ranges (not fully known).</p>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

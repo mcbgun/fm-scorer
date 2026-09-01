@@ -3,33 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}FM24 Scorer{% endblock %}</title>
+    <title>{% block title %}FM24 Squad Planner{% endblock %}</title>
+    <link rel="stylesheet" href="/static/vendor/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/vendor/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     {% block head %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">FM24 Scorer</a>
-            <div class="d-flex gap-3">
-                <a class="nav-link {% block nav_upload %}text-light{% endblock %}" href="/">Upload</a>
-                <a class="nav-link text-success fw-bold" href="/quickstart">Quick Start</a>
-                <a class="nav-link {% block nav_squad %}text-light{% endblock %}" href="/squad">Squad</a>
-                <a class="nav-link {% block nav_youth %}text-light{% endblock %}" href="/youth">Youth</a>
-                <a class="nav-link {% block nav_sell %}text-light{% endblock %}" href="/sell">Sell</a>
-                <a class="nav-link {% block nav_strategy %}text-light{% endblock %}" href="/strategy">Strategy</a>
-            </div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/">FM Planner</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav me-auto">
+                {% for href, label, key in [("/", "Dashboard", "dashboard"), ("/squad", "Squad", "squad"), ("/compare", "Targets", "comparison"), ("/youth", "Youth", "youth"), ("/sell", "Sell", "sell"), ("/registration", "Registration", "registration"), ("/strategy", "Strategy", "strategy"), ("/scenarios", "Scenarios", "scenarios"), ("/shortlist", "Shortlist", "shortlist"), ("/history", "History", "history"), ("/config", "Tactics", "config"), ("/upload", "Uploads", "upload")] %}
+                <li class="nav-item"><a class="nav-link {% if nav == key %}active fw-bold{% endif %}" href="{{ href }}">{{ label }}{% if key == 'shortlist' and hdr.shortlist_count %} <span class="badge bg-warning text-dark">{{ hdr.shortlist_count }}</span>{% endif %}</a></li>
+                {% endfor %}
+            </ul>
+            <form class="d-flex align-items-center gap-2 text-light small" method="post" action="/workspace/switch">
+                <input type="hidden" name="next" value="{{ request.url.path }}">
+                <select class="form-select form-select-sm bg-dark text-light border-secondary" name="workspace_id" onchange="this.form.submit()" title="Workspace">
+                    {% for w in hdr.workspaces %}<option value="{{ w.id }}" {% if w.id == hdr.workspace.id %}selected{% endif %}>{{ w.name }}{% if w.club %} · {{ w.club }}{% endif %}</option>{% endfor %}
+                </select>
+            </form>
         </div>
-    </nav>
-
-    <div class="container-fluid py-4">
-        {% block content %}{% endblock %}
     </div>
+</nav>
+<div class="state-bar bg-light border-bottom py-1 px-3 small d-flex flex-wrap gap-3 align-items-center">
+    {% if hdr.has_squad %}
+    <span><strong>{{ hdr.club or "Club unknown" }}</strong> · {{ hdr.season }}{% if not hdr.season_confident %} <span class="text-warning" title="Season could not be detected from DoB/Age; U21 exemptions may be wrong">?</span>{% endif %}</span>
+    <span>Formation: <a href="/config" class="text-decoration-none">{{ hdr.formation.name }}</a></span>
+    <span>Style: <strong>{{ hdr.profile.name }}</strong></span>
+    <span>Assumption: <strong>{{ assumptions[hdr.assumption] }}</strong></span>
+    <span>Budget: <strong>{{ hdr.budget_label }}</strong> / wages <strong>{{ hdr.wage_label }}</strong></span>
+    <span class="text-muted">{{ hdr.squad_rows }} players{% if hdr.has_targets %} · {{ "{:,}".format(hdr.target_rows) }} targets{% endif %}{% if hdr.has_registration %} · registration view{% endif %}</span>
+    <button class="btn btn-link btn-sm p-0 ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#quickSettings">Change tactics / budget</button>
+    {% else %}
+    <span class="text-muted">No squad loaded in workspace <strong>{{ hdr.workspace.name }}</strong>. <a href="/upload">Upload your FM exports</a>.</span>
+    {% endif %}
+</div>
+{% if hdr.has_squad %}
+<div class="collapse bg-light border-bottom" id="quickSettings">
+    <form class="container-fluid py-2 row g-2 align-items-end" method="post" action="/settings">
+        <input type="hidden" name="next" value="{{ request.url.path }}">
+        <div class="col-md-3"><label class="form-label small mb-0">Formation</label>
+            <select class="form-select form-select-sm" name="formation_id">{% for fid, f in formations.items() %}<option value="{{ fid }}" {% if fid == hdr.formation.id %}selected{% endif %}>{{ f.name }}</option>{% endfor %}</select></div>
+        <div class="col-md-2"><label class="form-label small mb-0">Playing style</label>
+            <select class="form-select form-select-sm" name="profile_id">{% for pid, p in profiles.items() %}<option value="{{ pid }}" {% if pid == hdr.profile.id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
+        <div class="col-md-2"><label class="form-label small mb-0">Scouting assumption</label>
+            <select class="form-select form-select-sm" name="assumption">{% for k, v in assumptions.items() %}<option value="{{ k }}" {% if k == hdr.assumption %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+        <div class="col-md-2"><label class="form-label small mb-0">Transfer budget (£M)</label>
+            <input class="form-control form-control-sm" name="transfer_budget" value="{{ hdr.transfer_budget if hdr.transfer_budget is not none else '' }}" placeholder="e.g. 25"></div>
+        <div class="col-md-2"><label class="form-label small mb-0">Spare wage budget (£K p/w)</label>
+            <input class="form-control form-control-sm" name="wage_budget" value="{{ hdr.wage_budget if hdr.wage_budget is not none else '' }}" placeholder="e.g. 60"></div>
+        <div class="col-md-1"><button class="btn btn-primary btn-sm w-100">Apply</button></div>
+    </form>
+</div>
+{% endif %}
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    {% block scripts %}{% endblock %}
+<div class="container-fluid py-3">
+    {% if flash %}<div class="alert alert-{{ flash_kind }} alert-dismissible py-2">{{ flash }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endif %}
+    {% block content %}{% endblock %}
+</div>
+
+<div class="offcanvas offcanvas-end player-drawer" tabindex="-1" id="playerDrawer">
+    <div class="offcanvas-header border-bottom py-2">
+        <h5 class="offcanvas-title" id="playerDrawerTitle">Player</h5>
+        <a id="playerDrawerLink" href="#" class="small ms-3">Open full page</a>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body" id="playerDrawerBody"><div class="text-muted">Loading…</div></div>
+</div>
+
+<script src="/static/vendor/jquery.min.js"></script>
+<script src="/static/vendor/bootstrap.bundle.min.js"></script>
+<script src="/static/vendor/jquery.dataTables.min.js"></script>
+<script src="/static/vendor/dataTables.bootstrap5.min.js"></script>
+<script src="/static/app.js"></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

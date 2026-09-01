@@ -1,219 +1,41 @@
 {% extends "base.html" %}
-{% block title %}FM24 Scorer - Youth Development{% endblock %}
-{% block nav_youth %}text-warning fw-bold{% endblock %}
-
+{% set nav = "youth" %}
+{% block title %}Youth · FM Planner{% endblock %}
 {% block content %}
-        <h1 class="mb-3">Youth Development Tracker</h1>
-        <p class="text-muted">Uses your saved squad file. Rate your young players by <strong>potential</strong>, not just current ability. Age and personality are factored in to identify who has the most room to grow.</p>
+<div class="d-flex flex-wrap align-items-baseline gap-3 mb-2">
+    <h1 class="h3 mb-0">Youth development</h1>
+    <span class="text-muted small">Players aged ≤ {{ settings.max_youth_age }}. Potential is an <em>estimate</em> from age, personality and any exported Potential / Training / Playing-time columns — the band shows how uncertain it is.</span>
+</div>
 
-        {% if error %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Error:</strong> {{ error }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endif %}
+<form class="card mb-3" method="post" action="/settings">
+    <input type="hidden" name="next" value="/youth">
+    <div class="card-body py-2 row g-2 align-items-end small">
+        <div class="col-auto"><label class="form-label mb-0">Max youth age</label><input class="form-control form-control-sm" name="max_youth_age" value="{{ settings.max_youth_age }}" style="width:6rem"></div>
+        <div class="col-auto"><button class="btn btn-primary btn-sm">Apply</button></div>
+    </div>
+</form>
 
-        {% if has_saved_files %}
-        <div class="alert alert-info" role="alert">
-            <strong>Saved squad found</strong> &mdash; you can analyze youth from your last uploaded squad without re-uploading.
-        </div>
-        {% endif %}
-
-        <form action="/youth" method="post" enctype="multipart/form-data" id="youthForm">
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card mb-3">
-                        <div class="card-header"><h5 class="mb-0">1. Squad File</h5></div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label for="squad_file" class="form-label">Squad HTML (your team)</label>
-                                <input class="form-control" type="file" id="squad_file" name="squad_file" accept=".html,.htm" {% if not has_saved_files %}required{% endif %}>
-                                {% if has_saved_files %}<div class="form-text">Optional &mdash; leave blank to use saved squad from last session.</div>{% endif %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card mb-3">
-                        <div class="card-header"><h5 class="mb-0">2. Weighting Profile</h5></div>
-                        <div class="card-body">
-                            {% for pid, profile in profiles.items() %}
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="profile_id" id="profile_{{ pid }}" value="{{ pid }}" {% if (saved and pid == saved.profile_id) or (not saved and pid == 'default') %}checked{% endif %}>
-                                <label class="form-check-label" for="profile_{{ pid }}">
-                                    <strong>{{ profile.name }}</strong>
-                                    <br><small class="text-muted">{{ profile.description }}</small>
-                                </label>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <div class="card mb-3">
-                        <div class="card-header"><h5 class="mb-0">3. Youth Settings</h5></div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label for="max_age" class="form-label">Max age for "youth"</label>
-                                <input type="number" class="form-control" id="max_age" name="max_age" value="{{ saved.max_age if saved and saved.max_age else 21 }}" min="15" max="25">
-                                <div class="form-text">Players at or below this age are included.</div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="top_n" class="form-label">Show top N prospects</label>
-                                <input type="number" class="form-control" id="top_n" name="top_n" value="50" min="1" max="500">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card mb-3">
-                        <div class="card-header"><h5 class="mb-0">4. Roles</h5></div>
-                        <div class="card-body">
-                            {% if formation_slots and formation_slots|length > 0 %}
-                            <div class="alert alert-info py-2 small mb-3">
-                                <strong>Using formation roles from your saved first team.</strong><br>
-                                {% for slot in formation_slots %}
-                                <span class="badge bg-secondary me-1 mb-1">{{ slot.pos }} &rarr; {{ roles[slot.role].name if slot.role in roles else slot.role }}</span>
-                                {% endfor %}
-                                <br><span class="text-muted">Set or change your formation on the <a href="/squad">Squad Comparison</a> page.</span>
-                            </div>
-                            <details>
-                                <summary class="small text-muted">Override with manual role selection</summary>
-                                <div class="mt-2">
-                                    <input type="hidden" name="roles" id="rolesInput" value="">
-                                    <div id="roleCheckboxes" style="max-height: 250px; overflow-y: auto;">
-                                        {% for group_name, role_ids in role_groups.items() %}
-                                        <div class="mb-2">
-                                            <strong class="text-muted small">{{ group_name }}</strong><br>
-                                            {% for rid in role_ids %}
-                                            <label class="form-check-label small me-3">
-                                                <input type="checkbox" class="form-check-input role-cb" value="{{ rid }}" data-role="{{ rid }}">
-                                                {{ roles[rid].name }}
-                                            </label>
-                                            {% endfor %}
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-                                    <div class="mt-2">
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectAllRoles(true)">All</button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectAllRoles(false)">None</button>
-                                    </div>
-                                </div>
-                            </details>
-                            {% else %}
-                            <div class="alert alert-warning py-2 small mb-2">
-                                No formation saved. Go to <a href="/squad">Squad Comparison</a> to set one up, or manually select roles below.
-                            </div>
-                            <input type="hidden" name="roles" id="rolesInput" value="{{ saved.roles|join(',') if saved and saved.roles else '' }}">
-                            <div id="roleCheckboxes" style="max-height: 250px; overflow-y: auto;">
-                                {% for group_name, role_ids in role_groups.items() %}
-                                <div class="mb-2">
-                                    <strong class="text-muted small">{{ group_name }}</strong><br>
-                                    {% for rid in role_ids %}
-                                    <label class="form-check-label small me-3">
-                                        <input type="checkbox" class="form-check-input role-cb" value="{{ rid }}" data-role="{{ rid }}">
-                                        {{ roles[rid].name }}
-                                    </label>
-                                    {% endfor %}
-                                </div>
-                                {% endfor %}
-                            </div>
-                            <div class="mt-2">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectAllRoles(true)">All</button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectAllRoles(false)">None</button>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100">Analyze Youth</button>
-                </div>
-
-                <div class="col-md-8">
-                    {% if table_html %}
-                    <div class="alert alert-success">
-                        <strong>Profile:</strong> {{ profile_name }}<br>
-                        <small>{{ profile_desc }}</small><br>
-                        <strong>Youth players found:</strong> {{ num_youth }} (age &le; {{ max_age }})<br>
-                        {% if formation_role_names and formation_role_names|length > 0 %}
-                        <strong>Scoring against formation roles:</strong>
-                        {% for rname in formation_role_names %}
-                        <span class="badge bg-primary me-1">{{ rname }}</span>
-                        {% endfor %}
-                        {% endif %}
-                    </div>
-
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <h5 class="mb-0">Youth Prospects &mdash; Ranked by Potential</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                {{ table_html | safe }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card mb-3">
-                        <div class="card-header"><h5 class="mb-0">How to Read This</h5></div>
-                        <div class="card-body small">
-                            <ul class="mb-0">
-                                <li><strong>Potential Score</strong> = current role score &times; age multiplier &times; personality multiplier. Higher = more room to grow.</li>
-                                <li><strong>Best Role</strong> = the role this player scores highest on right now.</li>
-                                <li><strong>Gap to First Team</strong> = how many points behind the current first-team starter for that role.</li>
-                                <li><strong>Est. Seasons to FT</strong> = rough estimate of how many seasons until they reach first-team level, based on age + personality growth rate.</li>
-                                <li><strong>Personality matters</strong>: Model Citizens and Professionals grow faster than Casual or Slack types.</li>
-                            </ul>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="card">
-                        <div class="card-body text-center text-muted py-5">
-                            <h4>No analysis yet</h4>
-                            <p>Upload your squad HTML (or use saved files) and click <strong>Analyze Youth</strong>.</p>
-                            <p class="small">The tool will rate every player aged {{ max_age if max_age else 21 }} or younger by their growth potential, not just current ability.</p>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </form>
-{% endblock %}
-
-{% block scripts %}
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <script>
-    function selectAllRoles(checked) {
-        document.querySelectorAll('.role-cb').forEach(cb => cb.checked = checked);
-        updateRolesInput();
-    }
-
-    function updateRolesInput() {
-        const selected = Array.from(document.querySelectorAll('.role-cb:checked')).map(cb => cb.value);
-        document.getElementById('rolesInput').value = selected.join(',');
-    }
-
-    {% if saved and saved.roles %}
-    document.addEventListener('DOMContentLoaded', function() {
-        const savedRoles = {{ saved.roles | tojson }};
-        savedRoles.forEach(rid => {
-            const cb = document.querySelector(`.role-cb[value="${rid}"]`);
-            if (cb) cb.checked = true;
-        });
-        updateRolesInput();
-    });
-    {% endif %}
-
-    document.querySelectorAll('.role-cb').forEach(cb => {
-        cb.addEventListener('change', updateRolesInput);
-    });
-
-    {% if table_html %}
-    $(document).ready(function() {
-        $('#youthResults').DataTable({
-            pageLength: 25,
-            order: [],
-            scrollX: true,
-        });
-    });
-    {% endif %}
-    </script>
+{% if not rows %}
+<div class="alert alert-info">No players at or under {{ settings.max_youth_age }} in this squad.</div>
+{% else %}
+<table class="table table-sm table-striped js-datatable w-100" data-order-col="6" data-page-length="50">
+    <thead><tr><th>Name</th><th>Age</th><th>Position</th><th>Personality</th><th>Best role</th><th>Now</th><th>Potential</th><th>Band</th><th>Growth signals</th><th>First-team benchmark</th><th>Gap</th><th>Est. seasons</th><th>Readiness</th><th>Value</th><th>Wage</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+    <tr>
+        <td><a data-player-source="squad" data-player-idx="{{ r._idx }}" data-player-name="{{ r.Name }}" href="/player/squad/{{ r._idx }}">{{ r.Name }}</a></td>
+        <td>{{ r.Age }}</td><td>{{ r.Position }}</td><td>{{ r.Personality }}</td><td>{{ r["Best Role"] }}</td>
+        <td><strong>{{ r["Best Role Score"] }}</strong>{% if r["Score Low"] != r["Score High"] %} <span class="score-band">({{ r["Score Low"] }}–{{ r["Score High"] }})</span>{% endif %}</td>
+        <td><strong>{{ r["Potential Score"] }}</strong></td>
+        <td class="score-band">{{ r["Potential Low"] }}–{{ r["Potential High"] }}</td>
+        <td class="wrap reason">{{ r["Growth Signals"] }}</td>
+        <td>{{ r["First Team Player"] }} ({{ r["First Team Benchmark"] }})</td>
+        <td>{{ r["Gap to First Team"] }}</td><td>{{ r["Est. Seasons to FT"] }}</td>
+        <td><span class="badge bg-{{ 'success' if r.Readiness == 'Ready' else ('info text-dark' if 'Loan' in r.Readiness|string else 'secondary') }}">{{ r.Readiness }}</span></td>
+        <td>{{ r["Transfer Value"] }}</td><td>{{ r.Wage }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
 {% endblock %}

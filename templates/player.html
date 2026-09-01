@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% set nav = "player" %}
+{% block title %}{{ p.name }} · FM Planner{% endblock %}
+{% block content %}
+<div class="mb-2"><a href="javascript:history.back()" class="small">← back</a></div>
+<div class="col-lg-9 mx-auto">
+{% include "_player_detail.html" %}
+</div>
+{% endblock %}

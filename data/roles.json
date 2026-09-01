@@ -1,0 +1,2259 @@
+{
+ "groups": {
+  "Goalkeepers": [
+   "gkd",
+   "skd",
+   "sks",
+   "ska"
+  ],
+  "Defenders": [
+   "bpdd",
+   "bpds",
+   "bpdc",
+   "cdd",
+   "cds",
+   "cdc",
+   "ncbd",
+   "ncbs",
+   "ncbc",
+   "ld",
+   "ls",
+   "wcbd",
+   "wcbs",
+   "wcba"
+  ],
+  "Full/Wing Backs": [
+   "fbd",
+   "fbs",
+   "fba",
+   "nfbd",
+   "ifbd",
+   "wbd",
+   "wbs",
+   "wba",
+   "cwbs",
+   "cwba",
+   "iwbd",
+   "iwbs",
+   "iwba"
+  ],
+  "Defensive/Central Mid": [
+   "ad",
+   "hbd",
+   "dmd",
+   "dms",
+   "bwmd",
+   "bwms",
+   "cmd",
+   "cms",
+   "cma",
+   "b2bs",
+   "cars",
+   "dlpd",
+   "dlps",
+   "regs",
+   "rps",
+   "svs",
+   "sva"
+  ],
+  "Attacking Mid/Wingers": [
+   "aps",
+   "apa",
+   "ams",
+   "ama",
+   "engs",
+   "ssa",
+   "ifs",
+   "ifa",
+   "iws",
+   "iwa",
+   "ws",
+   "wa",
+   "wps",
+   "wpa",
+   "wmd",
+   "wms",
+   "wma",
+   "dwd",
+   "dws",
+   "raua"
+  ],
+  "Forwards": [
+   "afa",
+   "cfs",
+   "cfa",
+   "dlfs",
+   "dlfa",
+   "f9s",
+   "pa",
+   "pfd",
+   "pfs",
+   "pfa",
+   "tfs",
+   "tfa",
+   "trea",
+   "wtfs",
+   "wtfa"
+  ]
+ },
+ "roles": {
+  "gkd": {
+   "name": "Goalkeeper - Defend",
+   "key": [
+    "Agi",
+    "Ref"
+   ],
+   "green": [
+    "Aer",
+    "Cmd",
+    "Han",
+    "Kic",
+    "Cnt",
+    "Pos"
+   ],
+   "blue": [
+    "1v1",
+    "Thr",
+    "Ant",
+    "Dec"
+   ]
+  },
+  "skd": {
+   "name": "Sweeper Keeper - Defend",
+   "key": [
+    "Agi",
+    "Ref"
+   ],
+   "green": [
+    "Cmd",
+    "Kic",
+    "1v1",
+    "Ant",
+    "Cnt",
+    "Pos"
+   ],
+   "blue": [
+    "Aer",
+    "Fir",
+    "Han",
+    "Pas",
+    "TRO",
+    "Dec",
+    "Vis",
+    "Acc"
+   ]
+  },
+  "sks": {
+   "name": "Sweeper Keeper - Support",
+   "key": [
+    "Agi",
+    "Ref"
+   ],
+   "green": [
+    "Cmd",
+    "Kic",
+    "1v1",
+    "Ant",
+    "Cnt",
+    "Pos"
+   ],
+   "blue": [
+    "Aer",
+    "Fir",
+    "Han",
+    "Pas",
+    "TRO",
+    "Dec",
+    "Vis",
+    "Acc"
+   ]
+  },
+  "ska": {
+   "name": "Sweeper Keeper - Attack",
+   "key": [
+    "Agi",
+    "Ref"
+   ],
+   "green": [
+    "Cmd",
+    "Kic",
+    "1v1",
+    "Ant",
+    "Cnt",
+    "Pos"
+   ],
+   "blue": [
+    "Aer",
+    "Fir",
+    "Han",
+    "Pas",
+    "TRO",
+    "Dec",
+    "Vis",
+    "Acc"
+   ]
+  },
+  "bpdd": {
+   "name": "Ball Playing Defender - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Hea",
+    "Mar",
+    "Pas",
+    "Tck",
+    "Pos",
+    "Str"
+   ],
+   "blue": [
+    "Fir",
+    "Tec",
+    "Agg",
+    "Ant",
+    "Bra",
+    "Cnt",
+    "Dec",
+    "Vis"
+   ]
+  },
+  "bpds": {
+   "name": "Ball Playing Defender - Stopper",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Hea",
+    "Pas",
+    "Tck",
+    "Pos",
+    "Str",
+    "Agg",
+    "Bra",
+    "Dec"
+   ],
+   "blue": [
+    "Fir",
+    "Tec",
+    "Ant",
+    "Cnt",
+    "Vis",
+    "Mar"
+   ]
+  },
+  "bpdc": {
+   "name": "Ball Playing Defender - Cover",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Mar",
+    "Pas",
+    "Tck",
+    "Pos",
+    "Ant",
+    "Cnt",
+    "Dec"
+   ],
+   "blue": [
+    "Fir",
+    "Tec",
+    "Bra",
+    "Vis",
+    "Str",
+    "Hea"
+   ]
+  },
+  "cdd": {
+   "name": "Central Defender - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Hea",
+    "Mar",
+    "Tck",
+    "Pos",
+    "Str"
+   ],
+   "blue": [
+    "Agg",
+    "Ant",
+    "Bra",
+    "Cnt",
+    "Dec"
+   ]
+  },
+  "cds": {
+   "name": "Central Defender - Stopper",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Hea",
+    "Tck",
+    "Agg",
+    "Bra",
+    "Dec",
+    "Pos",
+    "Str"
+   ],
+   "blue": [
+    "Mar",
+    "Ant",
+    "Cnt"
+   ]
+  },
+  "cdc": {
+   "name": "Central Defender - Cover",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Mar",
+    "Tck",
+    "Ant",
+    "Cnt",
+    "Dec",
+    "Pos"
+   ],
+   "blue": [
+    "Hea",
+    "Bra",
+    "Str"
+   ]
+  },
+  "ncbd": {
+   "name": "No-Nonsense CB - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Hea",
+    "Mar",
+    "Tck",
+    "Pos",
+    "Str"
+   ],
+   "blue": [
+    "Agg",
+    "Ant",
+    "Bra",
+    "Cnt"
+   ]
+  },
+  "ncbs": {
+   "name": "No-Nonsense CB - Stopper",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Hea",
+    "Tck",
+    "Agg",
+    "Bra",
+    "Pos",
+    "Str"
+   ],
+   "blue": [
+    "Mar",
+    "Ant",
+    "Cnt"
+   ]
+  },
+  "ncbc": {
+   "name": "No-Nonsense CB - Cover",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Mar",
+    "Tck",
+    "Ant",
+    "Cnt",
+    "Pos"
+   ],
+   "blue": [
+    "Hea",
+    "Bra",
+    "Str"
+   ]
+  },
+  "ld": {
+   "name": "Libero - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Fir",
+    "Hea",
+    "Mar",
+    "Pas",
+    "Tck",
+    "Tec",
+    "Dec",
+    "Pos",
+    "Tea",
+    "Str"
+   ],
+   "blue": [
+    "Ant",
+    "Bra",
+    "Cnt",
+    "Sta"
+   ]
+  },
+  "ls": {
+   "name": "Libero - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Fir",
+    "Hea",
+    "Mar",
+    "Pas",
+    "Tck",
+    "Tec",
+    "Dec",
+    "Pos",
+    "Tea",
+    "Str"
+   ],
+   "blue": [
+    "Dri",
+    "Ant",
+    "Bra",
+    "Cnt",
+    "Vis",
+    "Sta"
+   ]
+  },
+  "wcbd": {
+   "name": "Wide Centre Back - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Hea",
+    "Mar",
+    "Tck",
+    "Pos",
+    "Str"
+   ],
+   "blue": [
+    "Dri",
+    "Fir",
+    "Pas",
+    "Tec",
+    "Agg",
+    "Ant",
+    "Bra",
+    "Cnt",
+    "Dec",
+    "Wor",
+    "Agi"
+   ]
+  },
+  "wcbs": {
+   "name": "Wide Centre Back - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Dri",
+    "Hea",
+    "Mar",
+    "Tck",
+    "Pos",
+    "Str"
+   ],
+   "blue": [
+    "Cro",
+    "Fir",
+    "Pas",
+    "Tec",
+    "Agg",
+    "Ant",
+    "Bra",
+    "Cnt",
+    "Dec",
+    "OtB",
+    "Wor",
+    "Agi",
+    "Sta"
+   ]
+  },
+  "wcba": {
+   "name": "Wide Centre Back - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Jum",
+    "Cmp"
+   ],
+   "green": [
+    "Cro",
+    "Dri",
+    "Hea",
+    "Mar",
+    "Tck",
+    "OtB",
+    "Sta",
+    "Str"
+   ],
+   "blue": [
+    "Fir",
+    "Pas",
+    "Tec",
+    "Agg",
+    "Ant",
+    "Bra",
+    "Cnt",
+    "Dec",
+    "Pos",
+    "Wor",
+    "Agi"
+   ]
+  },
+  "fbd": {
+   "name": "Full Back - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Mar",
+    "Tck",
+    "Ant",
+    "Cnt",
+    "Pos"
+   ],
+   "blue": [
+    "Cro",
+    "Pas",
+    "Dec",
+    "Tea"
+   ]
+  },
+  "fbs": {
+   "name": "Full Back - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Mar",
+    "Tck",
+    "Ant",
+    "Cnt",
+    "Pos",
+    "Tea"
+   ],
+   "blue": [
+    "Cro",
+    "Dri",
+    "Pas",
+    "Tec",
+    "Dec"
+   ]
+  },
+  "fba": {
+   "name": "Full Back - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Cro",
+    "Mar",
+    "Tck",
+    "Ant",
+    "Pos",
+    "Tea"
+   ],
+   "blue": [
+    "Dri",
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cnt",
+    "Dec",
+    "OtB",
+    "Agi"
+   ]
+  },
+  "nfbd": {
+   "name": "No-Nonsense FB - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Mar",
+    "Tck",
+    "Ant",
+    "Pos",
+    "Str"
+   ],
+   "blue": [
+    "Hea",
+    "Agg",
+    "Bra",
+    "Cnt",
+    "Tea"
+   ]
+  },
+  "ifbd": {
+   "name": "Inverted Full Back - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Hea",
+    "Mar",
+    "Tck",
+    "Pos",
+    "Str"
+   ],
+   "blue": [
+    "Dri",
+    "Fir",
+    "Pas",
+    "Tec",
+    "Agg",
+    "Ant",
+    "Bra",
+    "Cmp",
+    "Cnt",
+    "Dec",
+    "Agi",
+    "Jum"
+   ]
+  },
+  "wbd": {
+   "name": "Wing Back - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Mar",
+    "Tck",
+    "Ant",
+    "Pos",
+    "Tea"
+   ],
+   "blue": [
+    "Cro",
+    "Dri",
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cnt",
+    "Dec",
+    "OtB",
+    "Agi",
+    "Bal"
+   ]
+  },
+  "wbs": {
+   "name": "Wing Back - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Cro",
+    "Dri",
+    "Mar",
+    "Tck",
+    "OtB",
+    "Tea"
+   ],
+   "blue": [
+    "Fir",
+    "Pas",
+    "Tec",
+    "Ant",
+    "Cnt",
+    "Dec",
+    "Pos",
+    "Agi",
+    "Bal"
+   ]
+  },
+  "wba": {
+   "name": "Wing Back - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Cro",
+    "Dri",
+    "Tck",
+    "Tec",
+    "OtB",
+    "Tea"
+   ],
+   "blue": [
+    "Fir",
+    "Mar",
+    "Pas",
+    "Ant",
+    "Cnt",
+    "Dec",
+    "Fla",
+    "Pos",
+    "Agi",
+    "Bal"
+   ]
+  },
+  "cwbs": {
+   "name": "Complete Wing Back - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Cro",
+    "Dri",
+    "Tec",
+    "OtB",
+    "Tea"
+   ],
+   "blue": [
+    "Fir",
+    "Mar",
+    "Pas",
+    "Tck",
+    "Ant",
+    "Dec",
+    "Fla",
+    "Pos",
+    "Agi",
+    "Bal"
+   ]
+  },
+  "cwba": {
+   "name": "Complete Wing Back - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Cro",
+    "Dri",
+    "Tec",
+    "Fla",
+    "OtB",
+    "Tea"
+   ],
+   "blue": [
+    "Fir",
+    "Mar",
+    "Pas",
+    "Tck",
+    "Ant",
+    "Dec",
+    "Pos",
+    "Agi",
+    "Bal"
+   ]
+  },
+  "iwbd": {
+   "name": "Inverted Wing Back - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Pas",
+    "Tck",
+    "Ant",
+    "Dec",
+    "Pos",
+    "Tea"
+   ],
+   "blue": [
+    "Fir",
+    "Mar",
+    "Tec",
+    "Cmp",
+    "Cnt",
+    "OtB",
+    "Agi"
+   ]
+  },
+  "iwbs": {
+   "name": "Inverted Wing Back - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tck",
+    "Cmp",
+    "Dec",
+    "Tea"
+   ],
+   "blue": [
+    "Mar",
+    "Tec",
+    "Ant",
+    "Cnt",
+    "OtB",
+    "Pos",
+    "Vis",
+    "Agi"
+   ]
+  },
+  "iwba": {
+   "name": "Inverted Wing Back - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tck",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "OtB",
+    "Tea",
+    "Vis"
+   ],
+   "blue": [
+    "Cro",
+    "Dri",
+    "Lon",
+    "Mar",
+    "Ant",
+    "Cnt",
+    "Fla",
+    "Pos",
+    "Agi"
+   ]
+  },
+  "ad": {
+   "name": "Anchor - Defend",
+   "key": [
+    "Wor",
+    "Sta",
+    "Acc",
+    "Pac"
+   ],
+   "green": [
+    "Mar",
+    "Tck",
+    "Ant",
+    "Cnt",
+    "Dec",
+    "Pos"
+   ],
+   "blue": [
+    "Cmp",
+    "Tea",
+    "Str"
+   ]
+  },
+  "hbd": {
+   "name": "Half Back - Defend",
+   "key": [
+    "Wor",
+    "Sta",
+    "Acc",
+    "Pac"
+   ],
+   "green": [
+    "Mar",
+    "Tck",
+    "Ant",
+    "Cmp",
+    "Cnt",
+    "Dec",
+    "Pos",
+    "Tea"
+   ],
+   "blue": [
+    "Fir",
+    "Pas",
+    "Agg",
+    "Bra",
+    "Jum",
+    "Str"
+   ]
+  },
+  "dmd": {
+   "name": "Defensive Midfielder - Defend",
+   "key": [
+    "Wor",
+    "Sta",
+    "Acc",
+    "Pac"
+   ],
+   "green": [
+    "Tck",
+    "Ant",
+    "Cnt",
+    "Pos",
+    "Tea"
+   ],
+   "blue": [
+    "Mar",
+    "Pas",
+    "Agg",
+    "Cmp",
+    "Str",
+    "Dec"
+   ]
+  },
+  "dms": {
+   "name": "Defensive Midfielder - Support",
+   "key": [
+    "Wor",
+    "Sta",
+    "Acc",
+    "Pac"
+   ],
+   "green": [
+    "Tck",
+    "Ant",
+    "Cnt",
+    "Pos",
+    "Tea"
+   ],
+   "blue": [
+    "Fir",
+    "Mar",
+    "Pas",
+    "Agg",
+    "Cmp",
+    "Dec",
+    "Str"
+   ]
+  },
+  "bwmd": {
+   "name": "Ball Winning Mid - Defend",
+   "key": [
+    "Wor",
+    "Sta",
+    "Acc",
+    "Pac"
+   ],
+   "green": [
+    "Tck",
+    "Agg",
+    "Ant",
+    "Tea"
+   ],
+   "blue": [
+    "Mar",
+    "Bra",
+    "Cnt",
+    "Pos",
+    "Agi",
+    "Str"
+   ]
+  },
+  "bwms": {
+   "name": "Ball Winning Mid - Support",
+   "key": [
+    "Wor",
+    "Sta",
+    "Acc",
+    "Pac"
+   ],
+   "green": [
+    "Tck",
+    "Agg",
+    "Ant",
+    "Tea"
+   ],
+   "blue": [
+    "Mar",
+    "Pas",
+    "Bra",
+    "Cnt",
+    "Agi",
+    "Str"
+   ]
+  },
+  "cmd": {
+   "name": "Central Midfielder - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Tck",
+    "Cnt",
+    "Dec",
+    "Pos",
+    "Tea"
+   ],
+   "blue": [
+    "Fir",
+    "Mar",
+    "Pas",
+    "Tec",
+    "Agg",
+    "Ant",
+    "Cmp"
+   ]
+  },
+  "cms": {
+   "name": "Central Midfielder - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tck",
+    "Dec",
+    "Tea"
+   ],
+   "blue": [
+    "Tec",
+    "Ant",
+    "Cmp",
+    "Cnt",
+    "OtB",
+    "Vis"
+   ]
+  },
+  "cma": {
+   "name": "Central Midfielder - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Dec",
+    "OtB"
+   ],
+   "blue": [
+    "Lon",
+    "Tck",
+    "Tec",
+    "Ant",
+    "Cmp",
+    "Tea",
+    "Vis"
+   ]
+  },
+  "b2bs": {
+   "name": "Box-to-Box Midfielder - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Pas",
+    "Tck",
+    "OtB",
+    "Tea"
+   ],
+   "blue": [
+    "Dri",
+    "Fin",
+    "Fir",
+    "Lon",
+    "Tec",
+    "Agg",
+    "Ant",
+    "Cmp",
+    "Dec",
+    "Pos",
+    "Bal",
+    "Str"
+   ]
+  },
+  "cars": {
+   "name": "Carrilero - Support",
+   "key": [
+    "Wor",
+    "Sta",
+    "Acc",
+    "Pac"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tck",
+    "Dec",
+    "Pos",
+    "Tea"
+   ],
+   "blue": [
+    "Tec",
+    "Ant",
+    "Cmp",
+    "Cnt",
+    "OtB",
+    "Vis"
+   ]
+  },
+  "dlpd": {
+   "name": "Deep Lying Playmaker - Defend",
+   "key": [
+    "Wor",
+    "Sta",
+    "Acc",
+    "Pac"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "Tea",
+    "Vis"
+   ],
+   "blue": [
+    "Tck",
+    "Ant",
+    "Pos",
+    "Bal"
+   ]
+  },
+  "dlps": {
+   "name": "Deep Lying Playmaker - Support",
+   "key": [
+    "Wor",
+    "Sta",
+    "Acc",
+    "Pac"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "Tea",
+    "Vis"
+   ],
+   "blue": [
+    "Ant",
+    "OtB",
+    "Pos",
+    "Bal"
+   ]
+  },
+  "regs": {
+   "name": "Regista - Support",
+   "key": [
+    "Wor",
+    "Sta",
+    "Acc",
+    "Pac"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "Fla",
+    "OtB",
+    "Tea",
+    "Vis"
+   ],
+   "blue": [
+    "Dri",
+    "Lon",
+    "Ant",
+    "Bal"
+   ]
+  },
+  "rps": {
+   "name": "Roaming Playmaker - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tec",
+    "Ant",
+    "Cmp",
+    "Dec",
+    "OtB",
+    "Tea",
+    "Vis"
+   ],
+   "blue": [
+    "Dri",
+    "Lon",
+    "Cnt",
+    "Pos",
+    "Agi",
+    "Bal"
+   ]
+  },
+  "svs": {
+   "name": "Segundo Volante - Support",
+   "key": [
+    "Wor",
+    "Sta",
+    "Acc",
+    "Pac"
+   ],
+   "green": [
+    "Mar",
+    "Pas",
+    "Tck",
+    "OtB",
+    "Pos"
+   ],
+   "blue": [
+    "Fin",
+    "Fir",
+    "Lon",
+    "Ant",
+    "Cmp",
+    "Cnt",
+    "Dec",
+    "Bal",
+    "Str"
+   ]
+  },
+  "sva": {
+   "name": "Segundo Volante - Attack",
+   "key": [
+    "Wor",
+    "Sta",
+    "Acc",
+    "Pac"
+   ],
+   "green": [
+    "Fin",
+    "Lon",
+    "Pas",
+    "Tck",
+    "Ant",
+    "OtB",
+    "Pos"
+   ],
+   "blue": [
+    "Fir",
+    "Mar",
+    "Cmp",
+    "Cnt",
+    "Dec",
+    "Bal"
+   ]
+  },
+  "aps": {
+   "name": "Advanced Playmaker - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "OtB",
+    "Tea",
+    "Vis"
+   ],
+   "blue": [
+    "Dri",
+    "Ant",
+    "Fla",
+    "Agi"
+   ]
+  },
+  "apa": {
+   "name": "Advanced Playmaker - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "OtB",
+    "Tea",
+    "Vis"
+   ],
+   "blue": [
+    "Dri",
+    "Ant",
+    "Fla",
+    "Agi"
+   ]
+  },
+  "ams": {
+   "name": "Attacking Midfielder - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Fir",
+    "Lon",
+    "Pas",
+    "Tec",
+    "Ant",
+    "Dec",
+    "Fla",
+    "OtB"
+   ],
+   "blue": [
+    "Dri",
+    "Cmp",
+    "Vis",
+    "Agi"
+   ]
+  },
+  "ama": {
+   "name": "Attacking Midfielder - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Dri",
+    "Fir",
+    "Lon",
+    "Pas",
+    "Tec",
+    "Ant",
+    "Dec",
+    "Fla",
+    "OtB"
+   ],
+   "blue": [
+    "Fin",
+    "Cmp",
+    "Vis",
+    "Agi"
+   ]
+  },
+  "engs": {
+   "name": "Enganche - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "Vis"
+   ],
+   "blue": [
+    "Dri",
+    "Ant",
+    "Fla",
+    "OtB",
+    "Tea",
+    "Agi"
+   ]
+  },
+  "ssa": {
+   "name": "Shadow Striker - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Dri",
+    "Fin",
+    "Fir",
+    "Ant",
+    "Cmp",
+    "OtB"
+   ],
+   "blue": [
+    "Pas",
+    "Tec",
+    "Cnt",
+    "Dec",
+    "Agi",
+    "Bal"
+   ]
+  },
+  "ifs": {
+   "name": "Inside Forward - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Dri",
+    "Fin",
+    "Fir",
+    "Tec",
+    "OtB",
+    "Agi"
+   ],
+   "blue": [
+    "Lon",
+    "Pas",
+    "Ant",
+    "Cmp",
+    "Fla",
+    "Vis",
+    "Bal"
+   ]
+  },
+  "ifa": {
+   "name": "Inside Forward - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Dri",
+    "Fin",
+    "Fir",
+    "Tec",
+    "Ant",
+    "OtB",
+    "Agi"
+   ],
+   "blue": [
+    "Lon",
+    "Pas",
+    "Cmp",
+    "Fla",
+    "Bal"
+   ]
+  },
+  "iws": {
+   "name": "Inverted Winger - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Cro",
+    "Dri",
+    "Pas",
+    "Tec",
+    "Agi"
+   ],
+   "blue": [
+    "Fir",
+    "Lon",
+    "Cmp",
+    "Dec",
+    "OtB",
+    "Vis",
+    "Bal"
+   ]
+  },
+  "iwa": {
+   "name": "Inverted Winger - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Cro",
+    "Dri",
+    "Pas",
+    "Tec",
+    "Agi"
+   ],
+   "blue": [
+    "Fir",
+    "Lon",
+    "Ant",
+    "Cmp",
+    "Dec",
+    "Fla",
+    "OtB",
+    "Vis",
+    "Bal"
+   ]
+  },
+  "ws": {
+   "name": "Winger - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Cro",
+    "Dri",
+    "Tec",
+    "Agi"
+   ],
+   "blue": [
+    "Fir",
+    "Pas",
+    "OtB",
+    "Bal"
+   ]
+  },
+  "wa": {
+   "name": "Winger - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Cro",
+    "Dri",
+    "Tec",
+    "Agi"
+   ],
+   "blue": [
+    "Fir",
+    "Pas",
+    "Ant",
+    "Fla",
+    "OtB",
+    "Bal"
+   ]
+  },
+  "wps": {
+   "name": "Wide Playmaker - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "Tea",
+    "Vis"
+   ],
+   "blue": [
+    "Dri",
+    "OtB",
+    "Agi"
+   ]
+  },
+  "wpa": {
+   "name": "Wide Playmaker - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Dri",
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "OtB",
+    "Tea",
+    "Vis"
+   ],
+   "blue": [
+    "Ant",
+    "Fla",
+    "Agi"
+   ]
+  },
+  "wmd": {
+   "name": "Wide Midfielder - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Pas",
+    "Tck",
+    "Cnt",
+    "Dec",
+    "Pos",
+    "Tea"
+   ],
+   "blue": [
+    "Cro",
+    "Fir",
+    "Mar",
+    "Tec",
+    "Ant",
+    "Cmp"
+   ]
+  },
+  "wms": {
+   "name": "Wide Midfielder - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Pas",
+    "Tck",
+    "Dec",
+    "Tea"
+   ],
+   "blue": [
+    "Cro",
+    "Fir",
+    "Tec",
+    "Ant",
+    "Cmp",
+    "Cnt",
+    "OtB",
+    "Pos",
+    "Vis"
+   ]
+  },
+  "wma": {
+   "name": "Wide Midfielder - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Cro",
+    "Fir",
+    "Pas",
+    "Dec",
+    "Tea"
+   ],
+   "blue": [
+    "Tck",
+    "Tec",
+    "Ant",
+    "Cmp",
+    "OtB",
+    "Vis"
+   ]
+  },
+  "dwd": {
+   "name": "Defensive Winger - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Tec",
+    "Ant",
+    "OtB",
+    "Pos",
+    "Tea"
+   ],
+   "blue": [
+    "Cro",
+    "Dri",
+    "Fir",
+    "Mar",
+    "Tck",
+    "Agg",
+    "Cnt",
+    "Dec"
+   ]
+  },
+  "dws": {
+   "name": "Defensive Winger - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Cro",
+    "Pas",
+    "Tec",
+    "OtB",
+    "Tea"
+   ],
+   "blue": [
+    "Dri",
+    "Fir",
+    "Mar",
+    "Pas",
+    "Tck",
+    "Agg",
+    "Ant",
+    "Cmp",
+    "Cnt",
+    "Dec",
+    "Pos"
+   ]
+  },
+  "mezs": {
+   "name": "Mezzala - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Pas",
+    "Tec",
+    "Dec",
+    "OtB"
+   ],
+   "blue": [
+    "Dri",
+    "Fir",
+    "Lon",
+    "Tck",
+    "Ant",
+    "Cmp",
+    "Vis",
+    "Bal"
+   ]
+  },
+  "meza": {
+   "name": "Mezzala - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Dri",
+    "Pas",
+    "Tec",
+    "Dec",
+    "OtB",
+    "Vis"
+   ],
+   "blue": [
+    "Fin",
+    "Fir",
+    "Lon",
+    "Ant",
+    "Cmp",
+    "Fla",
+    "Bal"
+   ]
+  },
+  "raua": {
+   "name": "Raumdeuter - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Fin",
+    "Ant",
+    "Cmp",
+    "Cnt",
+    "Dec",
+    "OtB",
+    "Bal"
+   ],
+   "blue": [
+    "Fir",
+    "Tec"
+   ]
+  },
+  "afa": {
+   "name": "Advanced Forward - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Dri",
+    "Fir",
+    "Tec",
+    "Cmp",
+    "OtB"
+   ],
+   "blue": [
+    "Pas",
+    "Ant",
+    "Dec",
+    "Wor",
+    "Agi",
+    "Bal",
+    "Sta"
+   ]
+  },
+  "cfs": {
+   "name": "Complete Forward - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Dri",
+    "Fir",
+    "Hea",
+    "Lon",
+    "Pas",
+    "Tec",
+    "Ant",
+    "Cmp",
+    "Dec",
+    "OtB",
+    "Vis",
+    "Agi",
+    "Str"
+   ],
+   "blue": [
+    "Tea",
+    "Wor",
+    "Bal",
+    "Jum",
+    "Sta"
+   ]
+  },
+  "cfa": {
+   "name": "Complete Forward - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Dri",
+    "Fir",
+    "Hea",
+    "Tec",
+    "Ant",
+    "Cmp",
+    "OtB",
+    "Agi",
+    "Str"
+   ],
+   "blue": [
+    "Lon",
+    "Pas",
+    "Dec",
+    "Tea",
+    "Vis",
+    "Wor",
+    "Bal",
+    "Jum",
+    "Sta"
+   ]
+  },
+  "dlfs": {
+   "name": "Deep Lying Forward - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "OtB",
+    "Tea"
+   ],
+   "blue": [
+    "Ant",
+    "Fla",
+    "Vis",
+    "Bal",
+    "Str"
+   ]
+  },
+  "dlfa": {
+   "name": "Deep Lying Forward - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "OtB",
+    "Tea"
+   ],
+   "blue": [
+    "Dri",
+    "Ant",
+    "Fla",
+    "Vis",
+    "Bal",
+    "Str"
+   ]
+  },
+  "f9s": {
+   "name": "False Nine - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Dri",
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "OtB",
+    "Vis",
+    "Agi"
+   ],
+   "blue": [
+    "Ant",
+    "Fla",
+    "Tea",
+    "Bal"
+   ]
+  },
+  "pa": {
+   "name": "Poacher - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Ant",
+    "Cmp",
+    "OtB"
+   ],
+   "blue": [
+    "Fir",
+    "Hea",
+    "Tec",
+    "Dec"
+   ]
+  },
+  "pfd": {
+   "name": "Pressing Forward - Defend",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Agg",
+    "Ant",
+    "Bra",
+    "Dec",
+    "Tea",
+    "Wor",
+    "Sta"
+   ],
+   "blue": [
+    "Fir",
+    "Cmp",
+    "Cnt",
+    "Agi",
+    "Bal",
+    "Str"
+   ]
+  },
+  "pfs": {
+   "name": "Pressing Forward - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Agg",
+    "Ant",
+    "Bra",
+    "Dec",
+    "Tea",
+    "Wor",
+    "Sta"
+   ],
+   "blue": [
+    "Fir",
+    "Pas",
+    "Cmp",
+    "Cnt",
+    "OtB",
+    "Agi",
+    "Bal",
+    "Str"
+   ]
+  },
+  "pfa": {
+   "name": "Pressing Forward - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Agg",
+    "Ant",
+    "Bra",
+    "OtB",
+    "Tea",
+    "Wor",
+    "Sta"
+   ],
+   "blue": [
+    "Fir",
+    "Cmp",
+    "Cnt",
+    "Dec",
+    "Agi",
+    "Bal",
+    "Str"
+   ]
+  },
+  "tfs": {
+   "name": "Target Forward - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Hea",
+    "Bra",
+    "Tea",
+    "Bal",
+    "Jum",
+    "Str"
+   ],
+   "blue": [
+    "Fir",
+    "Agg",
+    "Ant",
+    "Cmp",
+    "Dec",
+    "OtB"
+   ]
+  },
+  "tfa": {
+   "name": "Target Forward - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Hea",
+    "Bra",
+    "Cmp",
+    "OtB",
+    "Bal",
+    "Jum",
+    "Str"
+   ],
+   "blue": [
+    "Fir",
+    "Agg",
+    "Ant",
+    "Dec",
+    "Tea"
+   ]
+  },
+  "trea": {
+   "name": "Trequartista - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Fin"
+   ],
+   "green": [
+    "Dri",
+    "Fir",
+    "Pas",
+    "Tec",
+    "Cmp",
+    "Dec",
+    "Fla",
+    "OtB",
+    "Vis"
+   ],
+   "blue": [
+    "Ant",
+    "Agi",
+    "Bal"
+   ]
+  },
+  "wtfs": {
+   "name": "Wide Target Forward - Support",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Hea",
+    "Bra",
+    "Tea",
+    "Jum",
+    "Str"
+   ],
+   "blue": [
+    "Cro",
+    "Fir",
+    "Ant",
+    "OtB",
+    "Bal"
+   ]
+  },
+  "wtfa": {
+   "name": "Wide Target Forward - Attack",
+   "key": [
+    "Acc",
+    "Pac",
+    "Sta",
+    "Wor"
+   ],
+   "green": [
+    "Hea",
+    "Bra",
+    "OtB",
+    "Jum",
+    "Str"
+   ],
+   "blue": [
+    "Cro",
+    "Fin",
+    "Fir",
+    "Ant",
+    "Tea",
+    "Bal"
+   ]
+  }
+ }
+}

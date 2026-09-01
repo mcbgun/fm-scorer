@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% set nav = "shortlist" %}
+{% block title %}Shortlist · FM Planner{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-baseline gap-3 mb-2">
+    <h1 class="h3 mb-0">Shortlist</h1>
+    <span class="text-muted small">Pinned targets and squad players. Use them to build scenarios or take to the negotiating table.</span>
+    <div class="ms-auto d-flex gap-2 no-print">
+        <a class="btn btn-outline-secondary btn-sm" href="/shortlist.csv">CSV</a>
+        <a class="btn btn-outline-secondary btn-sm" href="javascript:window.print()">Print</a>
+        {% if items %}<a class="btn btn-outline-primary btn-sm" href="/scenarios?buys={{ items|selectattr('source', 'equalto', 'target')|map(attribute='name')|join(',')|urlencode }}">Evaluate all pinned as a scenario</a>{% endif %}
+    </div>
+</div>
+
+{% if not items %}
+<div class="alert alert-info">Nothing pinned yet. Use the ★ buttons on <a href="/compare">Targets</a>, the dashboard, or a player card.</div>
+{% else %}
+<table class="table table-sm table-striped w-100 align-middle">
+    <thead><tr><th>Player</th><th>Source</th><th>Age</th><th>Club</th><th>Position</th><th>Best slot / role</th><th>Score</th><th>Replaces</th><th>Value</th><th>Wage</th><th>Note</th><th class="no-print"></th></tr></thead>
+    <tbody>
+    {% for it in items %}{% set m = it.meta %}
+    <tr>
+        <td>{% if m.idx is defined %}<a data-player-source="{{ 'targets' if it.source == 'target' else 'squad' }}" data-player-idx="{{ m.idx }}" data-player-name="{{ it.name }}" href="/player/{{ 'targets' if it.source == 'target' else 'squad' }}/{{ m.idx }}">{{ it.name }}</a>{% else %}{{ it.name }}{% endif %}
+            {% if m.needs_scouting %}<span class="badge badge-scout">Scouting required</span>{% endif %}</td>
+        <td><span class="badge bg-{{ 'primary' if it.source == 'target' else 'secondary' }}">{{ it.source }}</span></td>
+        <td>{{ m.age }}</td><td>{{ m.club }}</td><td>{{ m.position }}</td>
+        <td>{{ m.slot }} · {{ m.best_role }}</td>
+        <td>{{ m.score }}{% if m.lo is defined and m.lo != m.hi %} <span class="score-band">({{ m.lo }}–{{ m.hi }})</span>{% endif %}</td>
+        <td>{% if m.incumbent %}{{ m.incumbent }} ({{ m.incumbent_score }})<br><span class="{{ 'text-success' if m.score > m.incumbent_score else 'text-muted' }}">{{ "%+.1f"|format(m.score - m.incumbent_score) }}</span>{% endif %}</td>
+        <td>{{ m.value }}</td><td>{{ m.wage }}</td>
+        <td class="wrap"><form method="post" action="/shortlist/add" class="d-flex gap-1 no-print"><input type="hidden" name="name" value="{{ it.name }}"><input type="hidden" name="source" value="{{ it.source }}"><input type="hidden" name="next" value="/shortlist"><input class="form-control form-control-sm" name="note" value="{{ it.note }}" placeholder="note"><button class="btn btn-outline-secondary btn-sm">save</button></form><span class="d-none d-print-inline">{{ it.note }}</span></td>
+        <td class="no-print"><form method="post" action="/shortlist/remove"><input type="hidden" name="name" value="{{ it.name }}"><input type="hidden" name="source" value="{{ it.source }}"><input type="hidden" name="next" value="/shortlist"><button class="btn btn-link btn-sm text-danger p-0">remove</button></form></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% endblock %}
