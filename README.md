@@ -30,6 +30,27 @@ Your data (workspaces, snapshots, shortlists, custom roles/formations) is stored
 in a SQLite database under `~/.fm-scorer/` (override with `FM_SCORER_DATA_DIR`).
 Nothing mutable is written inside the repository.
 
+### Updating to the latest version
+
+After new releases or fixes are pushed, run this from the repository folder:
+
+```bash
+./update.sh
+```
+
+It safely fast-forwards the current branch, creates `.venv` if necessary, and
+installs the pinned dependencies. It refuses to run when local files are
+uncommitted, so your work cannot be overwritten. If the app is already running
+with `--reload`, it will pick up the updated Python/templates automatically;
+otherwise start it again with:
+
+```bash
+.venv/bin/uvicorn main:app --reload
+```
+
+On Windows, double-click `update.bat` instead. It performs the same update and
+dependency installation using the Windows virtual environment.
+
 ## Exporting from FM24
 
 The parser expects the attribute columns from Squirrel_plays' FM24 views
