@@ -16,6 +16,7 @@ from fastapi import FastAPI, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from markupsafe import Markup
 
 from formations import delete_formation, list_formations, save_formation, validate_slots
 from money import fmt_millions, fmt_wage
@@ -32,7 +33,7 @@ BASE_DIR = Path(__file__).parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 templates.env.filters["millions"] = fmt_millions
 templates.env.filters["wage"] = fmt_wage
-templates.env.filters["tojson_safe"] = lambda v: json.dumps(v, default=str, ensure_ascii=False)
+templates.env.filters["tojson_safe"] = lambda v: Markup(json.dumps(v, default=str, ensure_ascii=False))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 store = Store()

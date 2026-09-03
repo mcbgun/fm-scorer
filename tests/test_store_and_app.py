@@ -104,6 +104,8 @@ def test_app_end_to_end(client):
         r = client.get(path)
         assert r.status_code == 200, path
         assert needle in r.text, path
+    assert "var ROLE_BY_ID" in client.get("/config").text
+    assert "&#34;" not in client.get("/config").text
 
     # exclude-unscouted hides Mystery from targets
     assert "Mystery" in client.get("/compare").text
