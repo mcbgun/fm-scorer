@@ -137,8 +137,11 @@ def _read_first_table(file_bytes: bytes) -> pd.DataFrame:
 
     try:
         tables = pd.read_html(io.StringIO(text), header=0)
-    except Exception as e:
-        raise ValueError(f"Could not parse HTML file: {e}") from e
+    except Exception as first_error:
+        try:
+            tables = pd.read_html(io.StringIO(text), header=0, flavor="html5lib")
+        except Exception as fallback_error:
+            raise ValueError(f"Could not parse HTML file: {fallback_error}") from first_error
 
     if not tables:
         raise ValueError("No tables found in HTML file")
