@@ -135,6 +135,11 @@
         text.textContent = "Uploading files…";
         if (btn) { btn.disabled = true; btn.textContent = "Uploading…"; }
 
+        var startedAt = Date.now();
+        var statusTimer = window.setInterval(function () {
+          var elapsed = Math.floor((Date.now() - startedAt) / 1000);
+          text.textContent = "Analysing files… " + elapsed + "s elapsed. Large exports may take a few minutes.";
+        }, 1000);
         var xhr = new XMLHttpRequest();
         xhr.open(f.method || "POST", f.action || window.location.href);
         xhr.upload.addEventListener("progress", function (event) {
@@ -145,6 +150,7 @@
           if (percent === 100) text.textContent = "Upload complete; analysing files…";
         });
         xhr.addEventListener("load", function () {
+          window.clearInterval(statusTimer);
           if (xhr.status >= 200 && xhr.status < 400) {
             text.textContent = "Upload processed; refreshing the workspace…";
             window.location.assign(xhr.responseURL || f.action);
@@ -154,6 +160,7 @@
           if (btn) { btn.disabled = false; btn.textContent = "Upload & analyse"; }
         });
         xhr.addEventListener("error", function () {
+          window.clearInterval(statusTimer);
           text.textContent = "Upload failed. Check the connection and try again.";
           if (btn) { btn.disabled = false; btn.textContent = "Upload & analyse"; }
         });

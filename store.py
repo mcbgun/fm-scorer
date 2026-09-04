@@ -93,7 +93,10 @@ def _now() -> str:
 def df_to_blob(df: pd.DataFrame) -> bytes:
     payload = json.loads(df.to_json(orient="split", date_format="iso", force_ascii=False, index=False))
     payload["dtypes"] = {c: str(t) for c, t in df.dtypes.items()}
-    return gzip.compress(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+    return gzip.compress(
+        json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        compresslevel=6,
+    )
 
 
 def blob_to_df(blob: bytes) -> pd.DataFrame:
