@@ -1,6 +1,7 @@
 import pandas as pd
 from conftest import make_player, make_squad
 
+import parser
 from parser import parse_attr_cell, parse_registration_file
 from profiles import PROFILES
 from registration import (
@@ -66,6 +67,19 @@ def test_parse_registration_file_requires_inf():
     html = b"<table><tr><th>Name</th><th>Inf</th></tr><tr><td>Bob</td><td>U21</td></tr></table>"
     df = parse_registration_file(html)
     assert list(df["Inf"]) == ["U21"]
+
+
+def test_html_parser_recovers_when_pandas_parser_fails(monkeypatch):
+    html = b"<html><body><table><tr><th>Name</th><th>Acc</th></tr><tr><td>Bob<td>14</tr></table></body></html>"
+
+    def fail_read_html(*args, **kwargs):
+        raise RuntimeError("simulated parser failure")
+
+    monkeypatch.setattr(parser.pd, "read_html", fail_read_html)
+    df = parser._read_first_table(html)
+
+    assert list(df["Name"]) == ["Bob"]
+    assert list(df["Acc"]) == ["14"]
 
 
 # ---------------------------------------------------------------- season detection

@@ -14,6 +14,7 @@ import io
 import re
 
 import pandas as pd
+from lxml import html as lxml_html
 
 from roles import ALL_ATTRIBUTES
 
@@ -82,6 +83,28 @@ def _coerce_attr_column(series: pd.Series) -> tuple[pd.Series, pd.Series, pd.Ser
     return mid, lo, hi, known
 
 
+def _read_table_with_recovery(text: str) -> pd.DataFrame:
+    """Read the first table with lxml recovery when pandas cannot handle a file."""
+    lower = text.lower()
+    start = lower.find("<table")
+    end = lower.rfind("</table>")
+    if start < 0 or end < 0:
+        raise ValueError("No table found in HTML file")
+    fragment = text[start:end + len("</table>")]
+    root = lxml_html.fromstring(fragment, parser=lxml_html.HTMLParser(recover=True))
+    rows = []
+    for row in root.xpath(".//tr"):
+        cells = row.xpath("./th|./td")
+        if cells:
+            rows.append([" ".join(cell.itertext()).strip() for cell in cells])
+    if not rows:
+        raise ValueError("No rows found in HTML table")
+    header = rows[0]
+    width = len(header)
+    values = [row[:width] + [""] * max(0, width - len(row)) for row in rows[1:]]
+    return pd.DataFrame(values, columns=header)
+
+
 def fix_mojibake(text: str) -> str:
     """FM writes UTF-8 but declares another charset; '£' shows up as 'Â£'."""
     return text.replace("Â£", "£").replace("â‚¬", "€").replace("Ã©", "é")
@@ -139,9 +162,13 @@ def _read_first_table(file_bytes: bytes) -> pd.DataFrame:
         tables = pd.read_html(io.StringIO(text), header=0)
     except Exception as first_error:
         try:
-            tables = pd.read_html(io.StringIO(text), header=0, flavor="html5lib")
-        except Exception as fallback_error:
-            raise ValueError(f"Could not parse HTML file: {fallback_error}") from first_error
+            df = _read_table_with_recovery(text)
+            tables = [df]
+        except Exception:
+            try:
+                tables = pd.read_html(io.StringIO(text), header=0, flavor="html5lib")
+            except Exception as fallback_error:
+                raise ValueError(f"Could not parse HTML file: {fallback_error}") from first_error
 
     if not tables:
         raise ValueError("No tables found in HTML file")
