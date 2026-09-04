@@ -146,9 +146,8 @@
         });
         xhr.addEventListener("load", function () {
           if (xhr.status >= 200 && xhr.status < 400) {
-            document.open();
-            document.write(xhr.responseText);
-            document.close();
+            text.textContent = "Upload processed; refreshing the workspace…";
+            window.location.assign(xhr.responseURL || f.action);
             return;
           }
           text.textContent = "Upload failed (" + xhr.status + ").";
