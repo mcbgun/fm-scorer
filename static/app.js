@@ -150,12 +150,37 @@
           if (percent === 100) text.textContent = "Upload complete; analysing files…";
         });
         xhr.addEventListener("load", function () {
-          window.clearInterval(statusTimer);
           if (xhr.status >= 200 && xhr.status < 400) {
+            var response = {};
+            try { response = JSON.parse(xhr.responseText); } catch (error) {}
+            if (response.state === "processing" && response.job_id) {
+              text.textContent = "Upload received; analysing in the background…";
+              var poll = window.setInterval(function () {
+                fetch("/upload/status/" + encodeURIComponent(response.job_id))
+                  .then(function (result) { return result.json(); })
+                  .then(function (job) {
+                    if (job.state === "complete") {
+                      window.clearInterval(poll);
+                      window.clearInterval(statusTimer);
+                      text.textContent = "Upload processed; refreshing the workspace…";
+                      window.location.assign("/upload?job=" + encodeURIComponent(response.job_id));
+                    } else if (job.state === "failed") {
+                      window.clearInterval(poll);
+                      window.clearInterval(statusTimer);
+                      text.textContent = "Analysis failed: " + (job.error || "unknown error");
+                      if (btn) { btn.disabled = false; btn.textContent = "Upload & analyse"; }
+                    }
+                  })
+                  .catch(function () {});
+              }, 1000);
+              return;
+            }
+            window.clearInterval(statusTimer);
             text.textContent = "Upload processed; refreshing the workspace…";
             window.location.assign(xhr.responseURL || f.action);
             return;
           }
+          window.clearInterval(statusTimer);
           text.textContent = "Upload failed (" + xhr.status + ").";
           if (btn) { btn.disabled = false; btn.textContent = "Upload & analyse"; }
         });

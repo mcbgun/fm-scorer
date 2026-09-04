@@ -8,6 +8,10 @@ lives in the SQLite ``Store`` (outside the repository).
 import csv
 import io
 import json
+import threading
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict
 from pathlib import Path
 from urllib.parse import quote
 
@@ -42,6 +46,10 @@ ASSUMPTION_LABELS = {"low": "Conservative", "mid": "Midpoint", "high": "Optimist
 SLOT_POSITIONS = ["GK", "DR", "DCR", "DC", "DCL", "DL", "WBR", "WBL", "DMR", "DMCR", "DMC", "DMCL", "DML",
                   "MR", "MCR", "MC", "MCL", "ML", "AMR", "AMCR", "AMC", "AMCL", "AML", "STCR", "STC", "STCL"]
 UPLOAD_KINDS = ("squad", "targets", "registration")
+ASYNC_UPLOAD_BYTES = 5 * 1024 * 1024
+_upload_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="fm-upload")
+_upload_jobs: dict[str, dict] = {}
+_upload_jobs_lock = threading.Lock()
 
 
 # ------------------------------------------------------------------ helpers
@@ -106,6 +114,34 @@ def _opt_float(v: str | None) -> float | None:
         return None
 
 
+def _upload_job_update(job_id: str, **changes) -> None:
+    with _upload_jobs_lock:
+        if job_id in _upload_jobs:
+            _upload_jobs[job_id].update(changes)
+
+
+def _process_upload_job(job_id: str, wid: int, changes: dict, uploads: list[tuple[str, bytes, str]]) -> None:
+    try:
+        ctx = WorkspaceContext(store, wid)
+        if changes:
+            ctx.save_settings(**changes)
+        reports = [ctx.ingest(kind, data, filename) for kind, data, filename in uploads]
+        _upload_job_update(
+            job_id,
+            state="complete",
+            reports=[asdict(report) for report in reports],
+            go_dashboard=not any(report.error for report in reports) and ctx.has_squad,
+        )
+    except Exception as exc:
+        _upload_job_update(job_id, state="failed", error=str(exc))
+
+
+def _upload_job_status(job_id: str) -> dict | None:
+    with _upload_jobs_lock:
+        job = _upload_jobs.get(job_id)
+        return dict(job) if job else None
+
+
 # ---------------------------------------------------------------- dashboard
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
@@ -120,8 +156,19 @@ async def dashboard(request: Request):
 @app.get("/upload", response_class=HTMLResponse)
 async def upload_page(request: Request):
     ctx = ctx_for(request)
-    return render("upload.html", request, ctx, reports=[], required_attrs=REQUIRED_ATTRS, notice=None,
-                  snapshots=store.list_snapshots(ctx.wid))
+    job = _upload_job_status(request.query_params.get("job", ""))
+    return render("upload.html", request, ctx, required_attrs=REQUIRED_ATTRS, notice=None,
+                  snapshots=store.list_snapshots(ctx.wid),
+                  reports=job.get("reports", []) if job and job.get("state") == "complete" else [],
+                  go_dashboard=bool(job and job.get("go_dashboard")))
+
+
+@app.get("/upload/status/{job_id}")
+async def upload_status(job_id: str):
+    job = _upload_job_status(job_id)
+    if job is None:
+        return JSONResponse({"state": "missing"}, status_code=404)
+    return JSONResponse(job)
 
 
 @app.post("/upload", response_class=HTMLResponse)
@@ -147,17 +194,24 @@ async def upload_files(
         changes["transfer_budget"] = tb
     if wage_budget.strip():
         changes["wage_budget"] = wb
-    if changes:
-        ctx.save_settings(**changes)
-
-    reports = []
+    uploads = []
     for kind, up in (("squad", squad_file), ("targets", targets_file), ("registration", registration_file)):
         if up is None or not up.filename:
             continue
         data = await up.read()
         if not data:
             continue
-        reports.append(ctx.ingest(kind, data, up.filename))
+        uploads.append((kind, data, up.filename))
+    if sum(len(data) for _, data, _ in uploads) >= ASYNC_UPLOAD_BYTES:
+        job_id = uuid.uuid4().hex
+        with _upload_jobs_lock:
+            _upload_jobs[job_id] = {"state": "processing", "job_id": job_id}
+        _upload_executor.submit(_process_upload_job, job_id, ctx.wid, changes, uploads)
+        return JSONResponse({"state": "processing", "job_id": job_id}, status_code=202)
+
+    if changes:
+        ctx.save_settings(**changes)
+    reports = [ctx.ingest(kind, data, filename) for kind, data, filename in uploads]
     if not reports:
         return render("upload.html", request, ctx, reports=[], required_attrs=REQUIRED_ATTRS,
                       notice="No files were selected.", snapshots=store.list_snapshots(ctx.wid))
