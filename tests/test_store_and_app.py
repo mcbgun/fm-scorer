@@ -81,6 +81,8 @@ def client(tmp_data_dir):
 def test_app_end_to_end(client):
     r = client.get("/")
     assert r.status_code == 200 and "Get started" in r.text  # empty workspace shows uploads inline
+    upload_page = client.get("/upload")
+    assert "uploadProgressBar" in upload_page.text
 
     rows = sample_rows()
     r = client.post("/upload", files={"squad_file": ("Squad.html", squad_html(rows), "text/html")},

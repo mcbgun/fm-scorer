@@ -121,7 +121,47 @@
         if (lbl) lbl.textContent = input.files.length ? input.files[0].name : "";
       });
     });
-    document.querySelectorAll("form[data-busy]").forEach(function (f) {
+    document.querySelectorAll("form[data-upload-progress]").forEach(function (f) {
+      f.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var wrap = document.getElementById("uploadProgress");
+        var bar = document.getElementById("uploadProgressBar");
+        var text = document.getElementById("uploadProgressText");
+        var btn = f.querySelector("button[type=submit]");
+        if (!wrap || !bar || !text) return;
+        wrap.classList.remove("d-none");
+        bar.style.width = "0%";
+        bar.textContent = "0%";
+        text.textContent = "Uploading files…";
+        if (btn) { btn.disabled = true; btn.textContent = "Uploading…"; }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open(f.method || "POST", f.action || window.location.href);
+        xhr.upload.addEventListener("progress", function (event) {
+          if (!event.lengthComputable) return;
+          var percent = Math.round((event.loaded / event.total) * 100);
+          bar.style.width = percent + "%";
+          bar.textContent = percent + "%";
+          if (percent === 100) text.textContent = "Upload complete; analysing files…";
+        });
+        xhr.addEventListener("load", function () {
+          if (xhr.status >= 200 && xhr.status < 400) {
+            document.open();
+            document.write(xhr.responseText);
+            document.close();
+            return;
+          }
+          text.textContent = "Upload failed (" + xhr.status + ").";
+          if (btn) { btn.disabled = false; btn.textContent = "Upload & analyse"; }
+        });
+        xhr.addEventListener("error", function () {
+          text.textContent = "Upload failed. Check the connection and try again.";
+          if (btn) { btn.disabled = false; btn.textContent = "Upload & analyse"; }
+        });
+        xhr.send(new FormData(f));
+      });
+    });
+    document.querySelectorAll("form[data-busy]:not([data-upload-progress])").forEach(function (f) {
       f.addEventListener("submit", function () {
         var btn = f.querySelector("button[type=submit]");
         if (btn) { btn.disabled = true; btn.textContent = f.dataset.busy; }

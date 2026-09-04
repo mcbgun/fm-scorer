@@ -42,7 +42,7 @@
         {% if go_dashboard %}<a class="btn btn-success btn-lg mb-4" href="/">Open the dashboard →</a>{% endif %}
         {% endif %}
 
-        <form method="post" action="/upload" enctype="multipart/form-data" data-busy="Processing… large target lists take a few seconds">
+        <form method="post" action="/upload" enctype="multipart/form-data" data-upload-progress>
             <div class="row g-3">
                 {% for kind, label, req, help in [
                     ("squad", "Squad", true, "Squad screen → a custom view with all attributes → right-click list → Print Screen → Web page. Needs Name, Age, Position and every attribute."),
@@ -68,6 +68,12 @@
                 <div class="col-md-2"><label class="form-label small mb-0">Spare wages £K p/w</label>
                     <input class="form-control form-control-sm" name="wage_budget" value="{{ hdr.wage_budget if hdr.wage_budget is not none else '' }}" placeholder="remaining"></div>
                 <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Upload & analyse</button></div>
+            </div>
+            <div id="uploadProgress" class="d-none mt-3" role="status" aria-live="polite">
+                <div class="progress" aria-label="Upload progress">
+                    <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">0%</div>
+                </div>
+                <div id="uploadProgressText" class="form-text">Uploading files…</div>
             </div>
             <p class="form-text mt-2">Budgets are optional but without them the strategy can only be funded by sales — it will say so rather than guessing.</p>
         </form>
