@@ -64,7 +64,7 @@ def _loan_farm_targets(ctx) -> list[dict]:
         wage_fit = 1 / (1 + wage / 2)
         versatility_fit = min(1.0, 0.75 + position_count * 0.1)
         loanability = age_fit * quality_fit * wage_fit * versatility_fit
-        capital_efficiency = 1 / (1 + cost * 8) if cost else 1.0
+        capital_efficiency = 1 / (1 + cost * 1.5) if cost else 1.0
         cashflow_efficiency = min(1.0, max(0.0, net_month) / max(cost * 10, 0.25)) if cost else 0.0
         score = 45 * loanability + 45 * capital_efficiency + 10 * cashflow_efficiency
         if score < 45:
