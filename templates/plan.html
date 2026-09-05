@@ -54,11 +54,11 @@
             <div class="card-header py-2 d-flex justify-content-between"><strong>Loan-farm pipeline</strong><a href="/compare" class="small">all targets →</a></div>
             <div class="table-responsive">
                 <table class="table table-sm mb-0 small">
-                    <thead><tr><th>Player</th><th>Age / position</th><th>Potential</th><th>Cost</th><th></th></tr></thead>
+                    <thead><tr><th>Player</th><th>Age / position</th><th>Route</th><th>Loan maths</th><th>Cost</th></tr></thead>
                     <tbody>
                     {% for item in plan.loan_farm %}
-                    <tr><td><a href="/player/targets/{{ item.idx }}">{{ item.name }}</a><br><span class="text-muted">{{ item.club }}</span></td><td>{{ item.age }} · {{ item.position }}</td><td>{{ item.potential if item.potential else "?" }}</td><td>{{ item.value|millions }}<br>{{ item.wage|wage }}</td><td>{% if item.needs_scouting %}<span class="badge badge-scout">Scout</span>{% else %}<span class="badge bg-info text-dark">Review</span>{% endif %}</td></tr>
-                    {% else %}<tr><td colspan="5" class="text-muted">Upload targets with Age, Potential, Value and Wage columns to build this pipeline.</td></tr>{% endfor %}
+                    <tr><td><a href="/player/targets/{{ item.idx }}">{{ item.name }}</a><br><span class="text-muted">{{ item.club }}</span></td><td>{{ item.age }} · {{ item.position }}</td><td><span class="badge bg-{{ 'success' if item.lane == 'Cash-flow asset' else 'secondary' }}">{{ item.lane }}</span><br><span class="text-muted">Potential {{ item.potential if item.potential else "?" }}</span></td><td>{% if item.cash_flow_known %}+{{ item.net_month|wage }}/month<br>{{ item.wage_share }}% wages{% else %}Offer test required{% endif %}</td><td>{{ item.cost|millions }}<br><span class="text-muted">~{{ item.resale_margin|millions }} upside</span></td></tr>
+                    {% else %}<tr><td colspan="5" class="text-muted">No cheap cash-flow assets passed the current cost and wage limits. Upload targets with Age, Value and Wage columns to screen them.</td></tr>{% endfor %}
                     </tbody>
                 </table>
             </div>

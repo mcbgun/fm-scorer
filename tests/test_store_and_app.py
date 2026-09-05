@@ -92,7 +92,9 @@ def test_app_end_to_end(client):
     # targets: one clear upgrade at ST, one unscouted
     targets = [make_player("Star Striker", "ST (C)", attrs={"Fin": 18, "Pac": 17, "Acc": 17, "OtB": 17, "Cmp": 16},
                            **{"Transfer Value": "£2M - £4M", "Club": "Elsewhere"}),
-               make_player("Mystery", "ST (C)", attrs={"Fin": "10-18", "Pac": "10-18"}, **{"Transfer Value": "£1M", "Club": "Far"})]
+               make_player("Mystery", "ST (C)", attrs={"Fin": "10-18", "Pac": "10-18"}, **{"Transfer Value": "£1M", "Club": "Far"}),
+               make_player("Cheap Loan Asset", "ST (C)", dob="01/01/2005 (20)", attrs={"Fin": 12, "Pac": 14},
+                           **{"Transfer Value": "£1M", "Asking Price": "£50K", "Wage": "£500 p/w", "Potential": 12, "Club": "Small Club"})]
     r = client.post("/upload", files={"targets_file": ("targets.html", squad_html(targets), "text/html")})
     assert r.status_code == 200
 
@@ -106,6 +108,9 @@ def test_app_end_to_end(client):
         r = client.get(path)
         assert r.status_code == 200, path
         assert needle in r.text, path
+    plan = client.get("/plan").text
+    assert "Cheap Loan Asset" in plan
+    assert "Star Striker" not in plan.split("Loan-farm pipeline", 1)[1]
     assert "var ROLE_BY_ID" in client.get("/config").text
     assert "&#34;" not in client.get("/config").text
 

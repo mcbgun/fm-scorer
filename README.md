@@ -74,7 +74,7 @@ conservative / midpoint / optimistic assumptions.
 ## What's in the app
 
 - **Club Plan** – one decision-first view joining finance building, first-team
-  recruitment, loan-farm targets and youth pathway decisions.
+  recruitment, cheap loan-farm cash-flow assets and youth pathway decisions.
 - **Dashboard** – Best XI on a pitch, weak slots with top-3 targets, sell and
   youth candidates, registration warnings and budget status.
 - **Squad** – depth chart per slot, full sortable table, player detail drawer

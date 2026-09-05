@@ -6,7 +6,7 @@ from typing import Any
 
 import pandas as pd
 
-from money import parse_value_range, parse_wage
+from money import parse_value_low, parse_value_range, parse_wage
 
 
 def _number(value: Any) -> float:
@@ -21,32 +21,68 @@ def _player_value(row: Any) -> float:
     return round((lo + hi) / 2, 2)
 
 
-def _farm_targets(ctx) -> list[dict]:
+def _loan_farm_targets(ctx) -> list[dict]:
     df = ctx.targets
     if df is None or df.empty or "Age" not in df.columns:
         return []
+    transfer_budget = _number(ctx.settings.get("transfer_budget"))
+    wage_budget = _number(ctx.settings.get("wage_budget"))
+    max_cost = max(0.05, transfer_budget * 0.02) if transfer_budget else 0.25
+    max_wage = max(0.5, wage_budget * 0.15) if wage_budget else 2.0
     rows = []
     for idx, row in df.iterrows():
         age = _number(row.get("Age"))
         potential = _number(row.get("Potential"))
-        if age > 21 or age <= 0:
+        if age <= 0 or age > 28:
             continue
-        value = _player_value(row)
+        cost = parse_value_low(row.get("Asking Price", "")) or parse_value_low(row.get("Transfer Value", ""))
         wage = parse_wage(str(row.get("Wage", "")))
-        score = potential * 2.0 - value * 0.15 - wage * 0.02
+        if cost > max_cost or wage > max_wage:
+            continue
+        value_lo, value_hi = parse_value_range(row.get("Transfer Value", ""))
+        is_free_agent = "free" in str(row.get("Club", "")).lower() or str(row.get("Transfer Value", "")).strip().lower() in {"free", "free agent"}
+        if cost == 0 and not is_free_agent:
+            continue
+        value_per_week = value_lo * 1000 / 192
+        wage_share = min(100, int(value_per_week / wage * 100 // 10) * 10) if wage else 100
+        wage_income = wage * wage_share / 100
+        fee_per_month = max(0.0, (value_per_week - wage) * 4) if wage_share == 100 else 0.0
+        net_month = wage_income + fee_per_month - wage
+        season_cash = net_month * 10
+        resale_margin = max(0.0, value_hi - cost)
+        if is_free_agent and value_lo == 0:
+            lane = "Free-agent test"
+            score = max(0, potential) * 0.2 - wage
+        elif net_month > 0:
+            lane = "Cash-flow asset"
+            score = net_month * 10 + resale_margin * 0.25 + max(0, 24 - age) * 0.02
+        else:
+            lane = "Development asset"
+            score = resale_margin * 0.25 + max(0, 24 - age) * 0.02
+        if net_month <= 0 and resale_margin <= 0 and not is_free_agent:
+            continue
         rows.append({
             "idx": int(idx),
             "name": str(row.get("Name", "")),
             "age": int(age),
             "position": str(row.get("Position", "")),
             "potential": round(potential, 1),
-            "value": value,
+            "cost": cost,
+            "value": value_lo,
+            "resale_value": value_hi,
             "wage": wage,
+            "wage_share": wage_share,
+            "fee_per_month": round(fee_per_month, 2),
+            "net_month": round(net_month, 2),
+            "season_cash": round(season_cash, 2),
+            "resale_margin": round(resale_margin, 2),
+            "lane": lane,
+            "cash_flow_known": not is_free_agent or value_lo > 0,
             "club": str(row.get("Club", "")),
             "score": round(score, 2),
             "needs_scouting": bool(row.get("Needs Scouting", False)),
         })
-    return sorted(rows, key=lambda item: (item["score"], item["potential"]), reverse=True)[:8]
+    return sorted(rows, key=lambda item: (item["score"], item["net_month"]), reverse=True)[:8]
 
 
 def build_club_plan(ctx) -> dict | None:
@@ -133,12 +169,13 @@ def build_club_plan(ctx) -> dict | None:
         "finance": finance,
         "next_actions": next_actions[:8],
         "first_team": first_team,
-        "loan_farm": _farm_targets(ctx),
+        "loan_farm": _loan_farm_targets(ctx),
         "youth": youth_rows,
         "best_xi": ctx.pitch_lineup(),
         "depth_alerts": [a for a in ctx.dashboard()["depth_alerts"] if a["status"] != "ok"],
         "notes": [
-            "Loan-farm income is not assumed: record an actual loan offer before counting fees or wage contributions.",
+            "Loan-farm candidates are screened as cheap assets: low acquisition cost, manageable wages and estimated loan cash flow come before potential.",
+            "The fee estimate uses a value-to-weekly-wage heuristic; verify it with an actual offer before counting income.",
             "Potential, playing time and facilities are uncertain, so development recommendations are bands rather than guarantees.",
         ],
     }
