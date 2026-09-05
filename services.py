@@ -48,6 +48,7 @@ DEFAULT_SETTINGS = {
     "max_age": 99,
     "max_value": "",
     "top_n": 50,
+    "loan_farm_limit": 50,
     "position_mode": "can_play",
     "board_sales_percentage": 100.0,
 }

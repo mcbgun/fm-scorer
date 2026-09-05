@@ -98,7 +98,8 @@ def _loan_farm_targets(ctx) -> list[dict]:
             "score": round(score, 2),
             "needs_scouting": bool(row.get("Needs Scouting", False)),
         })
-    return sorted(rows, key=lambda item: (item["score"], item["net_month"]), reverse=True)[:12]
+    limit = max(1, int(ctx.settings.get("loan_farm_limit", 50)))
+    return sorted(rows, key=lambda item: (item["score"], item["net_month"]), reverse=True)[:limit]
 
 
 def build_club_plan(ctx) -> dict | None:
