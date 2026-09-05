@@ -8,10 +8,14 @@ import pandas as pd
 
 from money import parse_value_low, parse_value_range, parse_wage
 
+LOAN_FARM_MAX_COST_M = 0.25
+LOAN_FARM_MAX_WAGE_K = 2.0
+
 
 def _number(value: Any) -> float:
     try:
-        return float(pd.to_numeric(value, errors="coerce"))
+        number = float(pd.to_numeric(value, errors="coerce"))
+        return 0.0 if pd.isna(number) else number
     except (TypeError, ValueError):
         return 0.0
 
@@ -25,10 +29,8 @@ def _loan_farm_targets(ctx) -> list[dict]:
     df = ctx.targets
     if df is None or df.empty or "Age" not in df.columns:
         return []
-    transfer_budget = _number(ctx.settings.get("transfer_budget"))
-    wage_budget = _number(ctx.settings.get("wage_budget"))
-    max_cost = max(0.05, transfer_budget * 0.02) if transfer_budget else 0.25
-    max_wage = max(0.5, wage_budget * 0.15) if wage_budget else 2.0
+    max_cost = LOAN_FARM_MAX_COST_M
+    max_wage = LOAN_FARM_MAX_WAGE_K
     rows = []
     for idx, row in df.iterrows():
         age = _number(row.get("Age"))
@@ -174,7 +176,7 @@ def build_club_plan(ctx) -> dict | None:
         "best_xi": ctx.pitch_lineup(),
         "depth_alerts": [a for a in ctx.dashboard()["depth_alerts"] if a["status"] != "ok"],
         "notes": [
-            "Loan-farm candidates are screened as cheap assets: low acquisition cost, manageable wages and estimated loan cash flow come before potential.",
+            "Loan-farm candidates are hard-capped at £250K acquisition cost and £2K p/w wages: this lane is for cheap cash-flow assets, not expensive prospects.",
             "The fee estimate uses a value-to-weekly-wage heuristic; verify it with an actual offer before counting income.",
             "Potential, playing time and facilities are uncertain, so development recommendations are bands rather than guarantees.",
         ],
