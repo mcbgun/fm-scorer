@@ -1,0 +1,87 @@
+{
+ "4231gp": {
+  "name": "4-2-3-1 DM AM Wide (Gegenpress)",
+  "profile": "gegenpress",
+  "slots": [
+   {"pos": "GK", "role": "sks"},
+   {"pos": "DR", "role": "wba"},
+   {"pos": "DCR", "role": "cdd"},
+   {"pos": "DCL", "role": "cdd"},
+   {"pos": "DL", "role": "wba"},
+   {"pos": "DMCR", "role": "hbd"},
+   {"pos": "DMCL", "role": "hbd"},
+   {"pos": "AMR", "role": "ifa"},
+   {"pos": "AMC", "role": "ams"},
+   {"pos": "AML", "role": "ifs"},
+   {"pos": "STC", "role": "afa"}
+  ]
+ },
+ "442": {
+  "name": "4-4-2 Classic",
+  "profile": "default",
+  "slots": [
+   {"pos": "GK", "role": "gkd"},
+   {"pos": "DR", "role": "fbd"},
+   {"pos": "DCR", "role": "cdd"},
+   {"pos": "DCL", "role": "cdd"},
+   {"pos": "DL", "role": "fbd"},
+   {"pos": "MR", "role": "wms"},
+   {"pos": "MCR", "role": "cms"},
+   {"pos": "MCL", "role": "cms"},
+   {"pos": "ML", "role": "wms"},
+   {"pos": "STR", "role": "afa"},
+   {"pos": "STL", "role": "dlfa"}
+  ]
+ },
+ "433": {
+  "name": "4-3-3 Attack",
+  "profile": "default",
+  "slots": [
+   {"pos": "GK", "role": "skd"},
+   {"pos": "DR", "role": "wba"},
+   {"pos": "DCR", "role": "cdd"},
+   {"pos": "DCL", "role": "cdd"},
+   {"pos": "DL", "role": "wba"},
+   {"pos": "MCR", "role": "dmd"},
+   {"pos": "MC", "role": "b2bs"},
+   {"pos": "MCL", "role": "apa"},
+   {"pos": "AMR", "role": "ifa"},
+   {"pos": "AML", "role": "ifs"},
+   {"pos": "STC", "role": "afa"}
+  ]
+ },
+ "4141": {
+  "name": "4-1-4-1 Possession",
+  "profile": "possession",
+  "slots": [
+   {"pos": "GK", "role": "sks"},
+   {"pos": "DR", "role": "iwbs"},
+   {"pos": "DCR", "role": "bpdd"},
+   {"pos": "DCL", "role": "bpdd"},
+   {"pos": "DL", "role": "iwbs"},
+   {"pos": "DMC", "role": "dlpd"},
+   {"pos": "MR", "role": "iws"},
+   {"pos": "MCR", "role": "cms"},
+   {"pos": "MCL", "role": "mezs"},
+   {"pos": "ML", "role": "iwa"},
+   {"pos": "STC", "role": "f9s"}
+  ]
+ },
+ "532": {
+  "name": "5-3-2 Low Block",
+  "profile": "low_block",
+  "slots": [
+   {"pos": "GK", "role": "gkd"},
+   {"pos": "DR", "role": "wbs"},
+   {"pos": "DCR", "role": "cdd"},
+   {"pos": "DC", "role": "cdc"},
+   {"pos": "DCL", "role": "cdd"},
+   {"pos": "DL", "role": "wbs"},
+   {"pos": "MCR", "role": "bwmd"},
+   {"pos": "MC", "role": "dlps"},
+   {"pos": "MCL", "role": "cms"},
+   {"pos": "STR", "role": "afa"},
+   {"pos": "STL", "role": "pfs"}
+  ]
+ }
+}

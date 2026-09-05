@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% set nav = "config" %}
+{% block title %}Tactics · FM Planner{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-baseline gap-3 mb-2">
+    <h1 class="h3 mb-0">Tactics &amp; roles</h1>
+    <span class="text-muted small">Formation, roles and playing style drive every score in the app. Custom definitions are stored outside the repo and can be shared as a tactics pack.</span>
+    <div class="ms-auto d-flex gap-2">
+        <a class="btn btn-outline-secondary btn-sm" href="/config/export">Export tactics pack</a>
+        <form method="post" action="/config/import" enctype="multipart/form-data" class="d-flex gap-1"><input type="file" class="form-control form-control-sm" name="file" accept=".json" required><button class="btn btn-outline-secondary btn-sm">Import</button></form>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Formation editor -->
+    <div class="col-lg-7">
+        <div class="card mb-3">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center"><strong>Formation editor</strong>
+                <form method="get" action="/config" class="d-flex gap-1 align-items-center small">
+                    <span class="text-muted">Load:</span>
+                    <select class="form-select form-select-sm" name="formation_id" onchange="loadFormation(this.value)">
+                        {% for fid, f in formations_all.items() %}<option value="{{ fid }}" {% if fid == current.id %}selected{% endif %}>{{ f.name }}{% if f.custom %} (custom){% endif %}</option>{% endfor %}
+                    </select>
+                </form>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/config/formation" id="formationForm" class="slot-editor">
+                    <input type="hidden" name="formation_id" id="fmFormationId" value="{{ current.id }}">
+                    <input type="hidden" name="slots_json" id="fmSlotsJson">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <div class="pitch pitch-sm" id="fmPitch"></div>
+                            <div class="small text-muted mt-1">Pitch preview updates as you edit.</div>
+                        </div>
+                        <div class="col-md-7">
+                            <table class="table table-sm small mb-2" id="fmSlots"><thead><tr><th>#</th><th>Position</th><th>Role</th><th></th></tr></thead><tbody></tbody></table>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addSlot()">+ Add slot</button>
+                            <span class="small text-muted ms-2">Exactly 11 slots including one GK.</span>
+                        </div>
+                    </div>
+                    <div class="row g-2 mt-2 align-items-end">
+                        <div class="col-md-3"><label class="form-label small mb-0">Playing style</label>
+                            <select class="form-select form-select-sm" name="profile_id">{% for pid, p in profiles.items() %}<option value="{{ pid }}" {% if pid == hdr.profile.id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
+                        <div class="col-md-3"><button type="submit" class="btn btn-primary btn-sm w-100">Apply to workspace</button></div>
+                        <div class="col-md-3"><label class="form-label small mb-0">Save as (id)</label><input class="form-control form-control-sm" name="save_as" placeholder="my_433"></div>
+                        <div class="col-md-3"><label class="form-label small mb-0">Display name</label><input class="form-control form-control-sm" name="name" placeholder="My 4-3-3"></div>
+                    </div>
+                </form>
+                {% if current.custom %}
+                <form method="post" action="/config/formation/delete" class="mt-2" onsubmit="return confirm('Delete this formation?')"><input type="hidden" name="formation_id" value="{{ current.id }}"><button class="btn btn-link btn-sm text-danger p-0">Delete '{{ current.name }}'</button></form>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header py-2"><strong>Playing styles (profiles)</strong> <span class="text-muted small">— a profile promotes / adds / removes attributes per role</span></div>
+            <div class="card-body small">
+                <div class="mb-2">{% for pid, p in profiles.items() %}<div><strong>{{ p.name }}</strong>{% if p.custom %} <span class="badge bg-secondary">custom</span>{% endif %} <span class="text-muted">— {{ p.description }}</span> <span class="text-muted">({{ p.changes|length }} roles adjusted)</span>
+                    {% if p.custom %}<form method="post" action="/config/profile/delete" class="d-inline"><input type="hidden" name="profile_id" value="{{ pid }}"><button class="btn btn-link btn-sm p-0 text-danger">delete</button></form>{% endif %}</div>{% endfor %}</div>
+                <details><summary>Create or edit a profile</summary>
+                    <form method="post" action="/config/profile" class="mt-2">
+                        <div class="row g-2">
+                            <div class="col-md-3"><input class="form-control form-control-sm" name="profile_id" placeholder="id e.g. highpress" required></div>
+                            <div class="col-md-3"><input class="form-control form-control-sm" name="name" placeholder="Name" required></div>
+                            <div class="col-md-6"><input class="form-control form-control-sm" name="description" placeholder="Description"></div>
+                        </div>
+                        <label class="form-label mb-0 mt-2">Changes JSON — <code>{"role_id": {"promote": {"Attr": "from_tier"}, "add": {"Attr": "tier"}, "remove": {"Attr": "tier"}}}</code>; tiers: key, green, blue</label>
+                        <textarea class="form-control form-control-sm font-monospace" name="changes_json" rows="4" placeholder='{"bpdd": {"promote": {"Pas": "green"}, "add": {"Vis": "blue"}}}'></textarea>
+                        <button class="btn btn-outline-primary btn-sm mt-2">Save profile</button>
+                    </form>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roles -->
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-header py-2"><strong>Roles</strong> <span class="text-muted small">— {{ roles|length }} defined; key ×5, preferred ×3, useful ×1</span></div>
+            <div class="card-body small">
+                <select class="form-select form-select-sm mb-2" id="roleView" onchange="showRole(this.value)">
+                    {% for g, ids in role_groups.items() %}<optgroup label="{{ g }}">{% for rid in ids %}<option value="{{ rid }}">{{ roles[rid].name }} ({{ rid }})</option>{% endfor %}</optgroup>{% endfor %}
+                </select>
+                <div id="roleViewBody" class="mb-2"></div>
+                <details><summary>Create or override a role</summary>
+                    <form method="post" action="/config/role" class="mt-2" id="roleForm">
+                        <div class="row g-2 mb-2">
+                            <div class="col-5"><input class="form-control form-control-sm" name="role_id" id="rfId" placeholder="id e.g. myrole" required></div>
+                            <div class="col-7"><input class="form-control form-control-sm" name="name" id="rfName" placeholder="Display name" required></div>
+                        </div>
+                        <label class="form-label mb-0 tier-key">Key attributes</label><input class="form-control form-control-sm" name="key" id="rfKey" placeholder="Pac, Acc, Fin">
+                        <label class="form-label mb-0 tier-green">Preferred</label><input class="form-control form-control-sm" name="green" id="rfGreen">
+                        <label class="form-label mb-0 tier-blue">Useful</label><input class="form-control form-control-sm" name="blue" id="rfBlue">
+                        <div class="form-text">Attributes: {{ attrs|join(", ") }}</div>
+                        <button class="btn btn-outline-primary btn-sm mt-2">Save role</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="copyRoleToForm()">Copy selected role into form</button>
+                    </form>
+                </details>
+                {% if custom_roles %}
+                <div class="mt-2"><strong>Custom roles:</strong> {% for rid, r in custom_roles.items() %}<span class="me-2">{{ r.name }} ({{ rid }}) <form method="post" action="/config/role/delete" class="d-inline"><input type="hidden" name="role_id" value="{{ rid }}"><button class="btn btn-link btn-sm p-0 text-danger">×</button></form></span>{% endfor %}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var FORMATIONS = {{ formations_all|tojson_safe }};
+var ROLES = {{ roles.values()|map(attribute="__dict__")|list|tojson_safe }};
+var ROLE_BY_ID = {}; ROLES.forEach(function (r) { ROLE_BY_ID[r.id] = r; });
+var ROLE_GROUPS = {{ role_groups|tojson_safe }};
+var SLOT_POSITIONS = {{ slot_positions|tojson_safe }};
+var slots = {{ current.slots|tojson_safe }};
+
+function layout(sl) {
+  /* mirror of services.pitch_layout: rows by position type, spread across width */
+  var rowY = { GK: 92, D: 76, WB: 66, DM: 56, M: 44, AM: 30, ST: 14 };
+  var parsed = sl.map(function (s) {
+    var m = /^(GK|WB|DM|AM|ST|D|M)(R|L|C|CR|CL)?$/.exec(s.pos.toUpperCase());
+    return { type: m ? m[1] : "M", side: m ? (m[2] || "") : "" };
+  });
+  var out = [];
+  var groups = {};
+  parsed.forEach(function (p, i) { (groups[p.type] = groups[p.type] || []).push(i); });
+  Object.keys(groups).forEach(function (t) {
+    var idxs = groups[t];
+    var order = { L: 0, CL: 1, C: 2, "": 2, CR: 3, R: 4 };
+    idxs.sort(function (a, b) { return order[parsed[a].side] - order[parsed[b].side]; });
+    idxs.forEach(function (i, k) { out[i] = { x: (100 * (k + 1)) / (idxs.length + 1), y: rowY[t] || 44 }; });
+  });
+  return out;
+}
+function renderSlots() {
+  var tb = document.querySelector("#fmSlots tbody"); tb.innerHTML = "";
+  slots.forEach(function (s, i) {
+    var tr = document.createElement("tr");
+    var posSel = '<select class="form-select form-select-sm" onchange="slots[' + i + '].pos=this.value;renderSlots()">' + SLOT_POSITIONS.map(function (p) { return '<option ' + (p === s.pos ? "selected" : "") + '>' + p + '</option>'; }).join("") + '</select>';
+    var roleSel = '<select class="form-select form-select-sm" onchange="slots[' + i + '].role=this.value;renderSlots()">' + Object.keys(ROLE_GROUPS).map(function (g) {
+      return '<optgroup label="' + g + '">' + ROLE_GROUPS[g].map(function (rid) { return '<option value="' + rid + '" ' + (rid === s.role ? "selected" : "") + '>' + ROLE_BY_ID[rid].name + '</option>'; }).join("") + '</optgroup>';
+    }).join("") + '</select>';
+    tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + posSel + '</td><td>' + roleSel + '</td><td><button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="slots.splice(' + i + ',1);renderSlots()">×</button></td>';
+    tb.appendChild(tr);
+  });
+  var pitch = document.getElementById("fmPitch"); pitch.innerHTML = '<div class="box top"></div><div class="box bottom"></div>';
+  var ly = layout(slots);
+  slots.forEach(function (s, i) {
+    var d = document.createElement("div"); d.className = "slot"; d.style.left = ly[i].x + "%"; d.style.top = ly[i].y + "%";
+    d.innerHTML = '<span class="chip" title="' + (ROLE_BY_ID[s.role] ? ROLE_BY_ID[s.role].name : s.role) + '">' + s.pos + '</span>';
+    pitch.appendChild(d);
+  });
+  document.getElementById("fmSlotsJson").value = JSON.stringify(slots);
+}
+function addSlot() { slots.push({ pos: "MC", role: Object.keys(ROLE_BY_ID)[0] }); renderSlots(); }
+function loadFormation(fid) { var f = FORMATIONS[fid]; if (!f) return; slots = f.slots.map(function (s) { return { pos: s.pos, role: s.role }; }); document.getElementById("fmFormationId").value = fid; renderSlots(); }
+function showRole(rid) {
+  var r = ROLE_BY_ID[rid]; if (!r) return;
+  document.getElementById("roleViewBody").innerHTML =
+    '<div><span class="tier-key">Key:</span> ' + r.key.join(", ") + '</div>' +
+    '<div><span class="tier-green">Preferred:</span> ' + r.green.join(", ") + '</div>' +
+    '<div><span class="tier-blue">Useful:</span> ' + (r.blue.join(", ") || "—") + '</div>' +
+    (r.custom ? '<div class="badge bg-secondary">custom</div>' : "");
+}
+function copyRoleToForm() {
+  var r = ROLE_BY_ID[document.getElementById("roleView").value]; if (!r) return;
+  document.getElementById("rfId").value = r.id; document.getElementById("rfName").value = r.name;
+  document.getElementById("rfKey").value = r.key.join(", "); document.getElementById("rfGreen").value = r.green.join(", "); document.getElementById("rfBlue").value = r.blue.join(", ");
+}
+document.getElementById("formationForm").addEventListener("submit", function () { document.getElementById("fmSlotsJson").value = JSON.stringify(slots); });
+renderSlots(); showRole(document.getElementById("roleView").value);
+</script>
+{% endblock %}

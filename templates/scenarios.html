@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% set nav = "scenarios" %}
+{% block title %}Scenarios · FM Planner{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-baseline gap-3 mb-2">
+    <h1 class="h3 mb-0">Scenarios — Plan A vs Plan B</h1>
+    <span class="text-muted small">Each scenario is a set of buys (from your targets) and sells (from your squad). They are re-evaluated live against the current formation and style.</span>
+</div>
+
+{% macro result_card(r, title, extra_controls) %}
+<div class="card h-100">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center"><strong>{{ title }}</strong>{{ extra_controls }}</div>
+    {% if r %}
+    <div class="card-body py-2 small">
+        <div class="row g-2 mb-2">
+            <div class="col-4"><div class="kpi {{ 'text-success' if r.improvement > 0 else 'text-danger' }}">{{ "%+.1f"|format(r.improvement) }}</div><div class="kpi-label">XI quality ({{ "%.1f"|format(r.quality_before) }} → {{ "%.1f"|format(r.quality_after) }}, {{ r.seasons }} s.)</div></div>
+            <div class="col-4"><div class="kpi">{{ r.net_spend_label }}</div><div class="kpi-label">Net spend{% if r.per_m is not none %} · {{ r.per_m }}/£M{% endif %}</div></div>
+            <div class="col-4"><div class="kpi">{{ r.wage_change_label }}</div><div class="kpi-label">Wage change p/w</div></div>
+        </div>
+        <div class="mb-1"><span class="text-success fw-bold">Buy:</span> {% for b in r.buys %}{{ b.name }} ({{ b.value_label }}{% if b.needs_scouting %}, unscouted{% endif %}){% if not loop.last %}, {% endif %}{% else %}—{% endfor %}</div>
+        <div class="mb-1"><span class="text-danger fw-bold">Sell:</span> {% for s in r.sells %}{{ s.name }} ({{ s.value_label }}){% if not loop.last %}, {% endif %}{% else %}—{% endfor %}</div>
+        {% if r.missing_targets %}<div class="text-warning">Not found: {{ r.missing_targets|join(", ") }}</div>{% endif %}
+        {% if not r.cover_ok %}<div class="text-danger">⚠ Leaves at least one slot without compatible cover.</div>{% endif %}
+        <details class="mt-1"><summary class="text-muted">Projected XI</summary>
+            <table class="table table-sm mb-0"><tbody>{% for s in r.lineup %}<tr class="{{ 'table-success' if s.is_new else '' }}"><td>{{ s.pos }}</td><td>{{ s.player_name }}{% if s.player_name != s.was %} <span class="text-muted">(was {{ s.was }})</span>{% endif %}</td><td>{{ "%.1f"|format(s.horizon) }}</td></tr>{% endfor %}</tbody></table>
+        </details>
+    </div>
+    {% else %}<div class="card-body py-2 small text-muted">Could not evaluate.</div>{% endif %}
+</div>
+{% endmacro %}
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-5">
+        <form class="card h-100" method="get" action="/scenarios">
+            <div class="card-header py-2"><strong>Try a plan</strong> <span class="text-muted small">— evaluates without saving</span></div>
+            <div class="card-body py-2 small">
+                <label class="form-label mb-0">Buys (one per line or comma-separated){% if shortlist_targets %} — <a href="#" onclick="document.getElementById('buysBox').value='{{ shortlist_targets|join(', ') }}';return false;">use shortlist</a>{% endif %}</label>
+                <textarea class="form-control form-control-sm mb-2" id="buysBox" name="buys" rows="3" list="targetNames" placeholder="Jarell Quansah">{{ adhoc_buys }}</textarea>
+                <label class="form-label mb-0">Sells</label>
+                <input class="form-control form-control-sm mb-2" name="sells" value="{{ adhoc_sells }}" list="squadNames" placeholder="Vitinho, ...">
+                <datalist id="squadNames">{% for n in squad_names %}<option value="{{ n }}">{% endfor %}</datalist>
+                <div class="d-flex gap-2 align-items-end">
+                    <div><label class="form-label mb-0">Assumption</label><select class="form-select form-select-sm" name="assumption">{% for k, v in assumptions.items() %}<option value="{{ k }}" {% if k == adhoc_assumption %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+                    <div><label class="form-label mb-0">Seasons</label><input class="form-control form-control-sm" name="seasons" value="{{ settings.seasons }}" style="width:5rem"></div>
+                    <button class="btn btn-primary btn-sm">Evaluate</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="col-lg-7">
+        {% if adhoc %}
+        {% set save_form %}
+        <form method="post" action="/scenarios" class="d-flex gap-1">
+            <input type="hidden" name="buys" value="{{ adhoc_buys }}"><input type="hidden" name="sells" value="{{ adhoc_sells }}"><input type="hidden" name="assumption" value="{{ adhoc.assumption }}"><input type="hidden" name="seasons" value="{{ adhoc.seasons }}">
+            <input class="form-control form-control-sm" name="name" placeholder="Plan name" required style="width:9rem"><button class="btn btn-outline-primary btn-sm">Save</button>
+        </form>
+        {% endset %}
+        {{ result_card(adhoc, "Trial result (" ~ assumptions[adhoc.assumption]|lower ~ ")", save_form) }}
+        {% else %}
+        <div class="card h-100"><div class="card-body small text-muted">Enter names on the left, or save the <a href="/strategy">Strategy</a> plan as a scenario to start comparing.</div></div>
+        {% endif %}
+    </div>
+</div>
+
+{% if results %}
+<h2 class="h5">Saved scenarios</h2>
+<div class="table-responsive mb-3">
+<table class="table table-sm small align-middle">
+    <thead><tr><th>Scenario</th><th>Assumption</th><th>XI quality</th><th>Δ</th><th>Net spend</th><th>Wage Δ</th><th>Per £M</th><th>Buys</th><th>Sells</th><th>Cover</th><th></th></tr></thead>
+    <tbody>
+    {% for row in results %}{% set s = row.scenario %}{% set r = row.result %}
+    <tr>
+        <td><strong>{{ s.name }}</strong></td><td>{{ assumptions[s.assumption] }} · {{ s.seasons }}s</td>
+        {% if r %}
+        <td>{{ "%.1f"|format(r.quality_before) }} → {{ "%.1f"|format(r.quality_after) }}</td>
+        <td class="fw-bold {{ 'text-success' if r.improvement > 0 else 'text-danger' }}">{{ "%+.2f"|format(r.improvement) }}</td>
+        <td>{{ r.net_spend_label }}</td><td>{{ r.wage_change_label }}</td><td>{{ r.per_m if r.per_m is not none else "—" }}</td>
+        <td>{{ s.buys|length }}{% if r.unscouted %} <span class="badge badge-scout">{{ r.unscouted|length }} unscouted</span>{% endif %}</td><td>{{ s.sells|length }}</td>
+        <td>{% if r.cover_ok %}<span class="text-success">ok</span>{% else %}<span class="text-danger">gap</span>{% endif %}</td>
+        {% else %}<td colspan="7" class="text-muted">could not evaluate</td>{% endif %}
+        <td class="text-nowrap">
+            <a class="btn btn-link btn-sm p-0 me-2" href="/scenarios?buys={{ s.buys|join(',')|urlencode }}&sells={{ s.sells|join(',')|urlencode }}&assumption={{ s.assumption }}&seasons={{ s.seasons }}">edit</a>
+            <form method="post" action="/scenarios/delete" class="d-inline"><input type="hidden" name="scenario_id" value="{{ s.id }}"><button class="btn btn-link btn-sm p-0 text-danger">delete</button></form>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+<div class="row g-3">
+    {% for row in results[:4] %}
+    <div class="col-md-6 col-xl-3">{{ result_card(row.result, row.scenario.name, "") }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

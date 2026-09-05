@@ -1,0 +1,2914 @@
+{
+ "default": {
+  "name": "Default (Squirrel)",
+  "description": "Squirrel_plays' original weightings. Key x5, Green x3, Blue x1.",
+  "changes": {}
+ },
+ "gegenpress": {
+  "name": "Gegenpress",
+  "description": "Elevates Anticipation, Aggression, and Teamwork across all roles. Based on FM-Arena 52k-match testing (Pace/Acc/Mental group highest impact) and AssMan gegenpress floors (Sta>=14, Wor>=14, Agg>=13, Ant>=13). Removes Flair from pressing roles (individualism hurts coordinated press).",
+  "changes": {
+   "sks": {
+    "promote": {
+     "Ant": "green"
+    },
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Vis": "blue"
+    }
+   },
+   "skd": {
+    "promote": {
+     "Ant": "green"
+    },
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Vis": "blue"
+    }
+   },
+   "ska": {
+    "promote": {
+     "Ant": "green"
+    },
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Vis": "blue"
+    }
+   },
+   "wba": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Fla": "blue"
+    }
+   },
+   "wbs": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Fla": "blue"
+    }
+   },
+   "wbd": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "cwba": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "cwbs": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "cdd": {
+    "promote": {
+     "Ant": "blue",
+     "Agg": "blue"
+    },
+    "remove": {
+     "Str": "green"
+    }
+   },
+   "cds": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "cdc": {
+    "promote": {
+     "Ant": "green"
+    },
+    "add": {
+     "Agg": "blue",
+     "Tea": "blue"
+    },
+    "remove": {
+     "Hea": "blue"
+    }
+   },
+   "ncbd": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "ncbs": {
+    "promote": {
+     "Ant": "blue"
+    }
+   },
+   "ncbc": {
+    "add": {
+     "Agg": "blue",
+     "Tea": "blue"
+    }
+   },
+   "bpdd": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "bpds": {
+    "promote": {
+     "Ant": "blue"
+    }
+   },
+   "bpdc": {
+    "add": {
+     "Agg": "blue",
+     "Tea": "blue"
+    }
+   },
+   "wcbd": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "wcbs": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "wcba": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "ld": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "ls": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "fbd": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "fbs": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "fba": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "nfbd": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "ifbd": {
+    "promote": {
+     "Ant": "blue"
+    }
+   },
+   "iwbd": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "iwbs": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "iwba": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "hbd": {
+    "promote": {
+     "Agg": "blue"
+    }
+   },
+   "ad": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "dmd": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "dms": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "bwmd": {
+    "promote": {
+     "Agg": "green"
+    }
+   },
+   "bwms": {
+    "promote": {
+     "Agg": "green"
+    }
+   },
+   "cmd": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "cms": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "cma": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "b2bs": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "cars": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "dlpd": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "dlps": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "regs": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "rps": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "svs": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "sva": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "ams": {
+    "add": {
+     "Agg": "blue",
+     "Tea": "blue"
+    },
+    "remove": {
+     "Cmp": "blue"
+    }
+   },
+   "ama": {
+    "add": {
+     "Agg": "blue",
+     "Tea": "blue"
+    },
+    "remove": {
+     "Cmp": "blue"
+    }
+   },
+   "aps": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Cmp": "green"
+    }
+   },
+   "apa": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Cmp": "green"
+    }
+   },
+   "engs": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "ssa": {
+    "add": {
+     "Agg": "blue",
+     "Tea": "blue"
+    }
+   },
+   "ifs": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Fla": "blue"
+    }
+   },
+   "ifa": {
+    "add": {
+     "Agg": "blue",
+     "Tea": "blue"
+    },
+    "remove": {
+     "Fla": "blue"
+    }
+   },
+   "iws": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Fla": "blue"
+    }
+   },
+   "iwa": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Fla": "blue"
+    }
+   },
+   "ws": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "wa": {
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Fla": "blue"
+    }
+   },
+   "wps": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "wpa": {
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Fla": "blue"
+    }
+   },
+   "wmd": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "wms": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "wma": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "dwd": {
+    "promote": {
+     "Agg": "blue"
+    }
+   },
+   "dws": {
+    "promote": {
+     "Agg": "blue"
+    }
+   },
+   "raua": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "afa": {
+    "promote": {
+     "Ant": "blue",
+     "Wor": "blue",
+     "Sta": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    },
+    "remove": {
+     "Bal": "blue"
+    }
+   },
+   "cfs": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "cfa": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "dlfs": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "dlfa": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "f9s": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "pa": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "pfd": {
+    "promote": {
+     "Agg": "green"
+    }
+   },
+   "pfs": {
+    "promote": {
+     "Agg": "green"
+    }
+   },
+   "pfa": {
+    "promote": {
+     "Agg": "green"
+    }
+   },
+   "tfs": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "tfa": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "trea": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "wtfs": {
+    "add": {
+     "Agg": "blue"
+    }
+   },
+   "wtfa": {
+    "add": {
+     "Agg": "blue"
+    }
+   }
+  }
+ },
+ "possession": {
+  "name": "Possession / Tiki-Taka",
+  "description": "Rewards Passing, First Touch, Composure, Decisions, Teamwork and Vision across every role; forwards additionally need link play (Off the Ball). Use for short-passing, high-possession systems.",
+  "changes": {
+   "gkd": {
+    "add": {
+     "Pas": "blue",
+     "Fir": "blue"
+    }
+   },
+   "skd": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue"
+    }
+   },
+   "sks": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue"
+    }
+   },
+   "ska": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue"
+    }
+   },
+   "bpdd": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Dec": "blue",
+     "Vis": "blue"
+    },
+    "add": {
+     "Tea": "blue"
+    }
+   },
+   "bpds": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Dec": "green",
+     "Vis": "blue"
+    },
+    "add": {
+     "Tea": "blue"
+    }
+   },
+   "bpdc": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Dec": "green",
+     "Vis": "blue"
+    },
+    "add": {
+     "Tea": "blue"
+    }
+   },
+   "cdd": {
+    "promote": {
+     "Dec": "blue"
+    },
+    "add": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "cds": {
+    "promote": {
+     "Dec": "green"
+    },
+    "add": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "cdc": {
+    "promote": {
+     "Dec": "green"
+    },
+    "add": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "ncbd": {
+    "add": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Dec": "blue",
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "ncbs": {
+    "add": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Dec": "blue",
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "ncbc": {
+    "add": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Dec": "blue",
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "ld": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Dec": "green",
+     "Tea": "green"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "ls": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "blue"
+    }
+   },
+   "wcbd": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Dec": "blue"
+    },
+    "add": {
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "wcbs": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Dec": "blue"
+    },
+    "add": {
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "wcba": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Dec": "blue"
+    },
+    "add": {
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "fbd": {
+    "promote": {
+     "Pas": "blue",
+     "Dec": "blue",
+     "Tea": "blue"
+    },
+    "add": {
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Vis": "blue"
+    }
+   },
+   "fbs": {
+    "promote": {
+     "Pas": "blue",
+     "Dec": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Vis": "blue"
+    }
+   },
+   "fba": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Dec": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Cmp": "blue",
+     "Vis": "blue"
+    }
+   },
+   "nfbd": {
+    "promote": {
+     "Tea": "blue"
+    },
+    "add": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "blue",
+     "Vis": "blue"
+    }
+   },
+   "ifbd": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "blue"
+    },
+    "add": {
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "wbd": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Dec": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Cmp": "blue",
+     "Vis": "blue"
+    }
+   },
+   "wbs": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Dec": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Cmp": "blue",
+     "Vis": "blue"
+    }
+   },
+   "wba": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Dec": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Cmp": "blue",
+     "Vis": "blue"
+    }
+   },
+   "cwbs": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Dec": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Cmp": "blue",
+     "Vis": "blue"
+    }
+   },
+   "cwba": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Dec": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Cmp": "blue",
+     "Vis": "blue"
+    }
+   },
+   "iwbd": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "green",
+     "Tea": "green"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "iwbs": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "green",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "blue"
+    }
+   },
+   "iwba": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "green",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "green"
+    }
+   },
+   "ad": {
+    "promote": {
+     "Cmp": "blue",
+     "Dec": "green",
+     "Tea": "blue"
+    },
+    "add": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Vis": "blue"
+    }
+   },
+   "hbd": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Cmp": "green",
+     "Dec": "green",
+     "Tea": "green"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "dmd": {
+    "promote": {
+     "Pas": "blue",
+     "Cmp": "blue",
+     "Dec": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Fir": "blue",
+     "Vis": "blue"
+    }
+   },
+   "dms": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "bwmd": {
+    "promote": {
+     "Tea": "green"
+    },
+    "add": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "blue",
+     "Vis": "blue"
+    }
+   },
+   "bwms": {
+    "promote": {
+     "Pas": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "blue",
+     "Vis": "blue"
+    }
+   },
+   "cmd": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "green",
+     "Tea": "green"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "cms": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "blue",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "blue"
+    }
+   },
+   "cma": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "blue",
+     "Dec": "green",
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "b2bs": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "cars": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "blue",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "blue"
+    }
+   },
+   "dlpd": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "green",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "green"
+    }
+   },
+   "dlps": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "green",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "green"
+    }
+   },
+   "regs": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "green",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "green"
+    }
+   },
+   "rps": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "green",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "green"
+    }
+   },
+   "svs": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "blue"
+    },
+    "add": {
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "sva": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "blue"
+    },
+    "add": {
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "aps": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "green",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "green"
+    }
+   },
+   "apa": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "green",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "green"
+    }
+   },
+   "ams": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "blue",
+     "Dec": "green",
+     "Vis": "blue"
+    },
+    "add": {
+     "Tea": "blue"
+    }
+   },
+   "ama": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "blue",
+     "Dec": "green",
+     "Vis": "blue"
+    },
+    "add": {
+     "Tea": "blue"
+    }
+   },
+   "engs": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "green",
+     "Dec": "green",
+     "Tea": "blue",
+     "Vis": "green"
+    }
+   },
+   "ssa": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "green",
+     "Cmp": "green",
+     "Dec": "blue"
+    },
+    "add": {
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "ifs": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "green",
+     "Cmp": "blue",
+     "Vis": "blue"
+    },
+    "add": {
+     "Dec": "blue",
+     "Tea": "blue"
+    }
+   },
+   "ifa": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "green",
+     "Cmp": "blue"
+    },
+    "add": {
+     "Dec": "blue",
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "iws": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "blue",
+     "Vis": "blue"
+    },
+    "add": {
+     "Tea": "blue"
+    }
+   },
+   "iwa": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "blue",
+     "Vis": "blue"
+    },
+    "add": {
+     "Tea": "blue"
+    }
+   },
+   "ws": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue"
+    },
+    "add": {
+     "Cmp": "blue",
+     "Dec": "blue",
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "wa": {
+    "promote": {
+     "Pas": "blue",
+     "Fir": "blue"
+    },
+    "add": {
+     "Cmp": "blue",
+     "Dec": "blue",
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "wps": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "green",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "green"
+    }
+   },
+   "wpa": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "green",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "green"
+    }
+   },
+   "wmd": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "green",
+     "Tea": "green"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "wms": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "blue"
+    }
+   },
+   "wma": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "green",
+     "Cmp": "blue",
+     "Dec": "green",
+     "Tea": "green",
+     "Vis": "blue"
+    }
+   },
+   "dwd": {
+    "promote": {
+     "Fir": "blue",
+     "Dec": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Pas": "blue",
+     "Cmp": "blue",
+     "Vis": "blue"
+    }
+   },
+   "dws": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "mezs": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "green",
+     "Vis": "blue"
+    },
+    "add": {
+     "Tea": "blue"
+    }
+   },
+   "meza": {
+    "promote": {
+     "Pas": "green",
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Dec": "green",
+     "Vis": "green"
+    },
+    "add": {
+     "Tea": "blue"
+    }
+   },
+   "raua": {
+    "promote": {
+     "Fir": "blue",
+     "Cmp": "green",
+     "Dec": "green"
+    },
+    "add": {
+     "Pas": "blue",
+     "Tea": "blue",
+     "Vis": "blue"
+    }
+   },
+   "afa": {
+    "promote": {
+     "Fir": "green",
+     "Pas": "blue",
+     "Cmp": "green",
+     "OtB": "green"
+    },
+    "add": {
+     "Tea": "blue"
+    }
+   },
+   "cfs": {
+    "promote": {
+     "Fir": "green",
+     "Pas": "green",
+     "Cmp": "green",
+     "Tea": "blue",
+     "OtB": "green"
+    }
+   },
+   "cfa": {
+    "promote": {
+     "Fir": "green",
+     "Pas": "blue",
+     "Cmp": "green",
+     "Tea": "blue",
+     "OtB": "green"
+    }
+   },
+   "dlfs": {
+    "promote": {
+     "Fir": "green",
+     "Pas": "green",
+     "Cmp": "green",
+     "Tea": "green",
+     "OtB": "green"
+    }
+   },
+   "dlfa": {
+    "promote": {
+     "Fir": "green",
+     "Pas": "green",
+     "Cmp": "green",
+     "Tea": "green",
+     "OtB": "green"
+    }
+   },
+   "f9s": {
+    "promote": {
+     "Fir": "green",
+     "Pas": "green",
+     "Cmp": "green",
+     "Tea": "blue",
+     "OtB": "green"
+    }
+   },
+   "pa": {
+    "promote": {
+     "Fir": "blue",
+     "Cmp": "green",
+     "OtB": "green"
+    },
+    "add": {
+     "Pas": "blue",
+     "Tea": "blue"
+    }
+   },
+   "pfd": {
+    "promote": {
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Tea": "green"
+    },
+    "add": {
+     "Pas": "blue",
+     "OtB": "blue"
+    }
+   },
+   "pfs": {
+    "promote": {
+     "Fir": "blue",
+     "Pas": "blue",
+     "Cmp": "blue",
+     "Tea": "green",
+     "OtB": "blue"
+    }
+   },
+   "pfa": {
+    "promote": {
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Tea": "green",
+     "OtB": "green"
+    },
+    "add": {
+     "Pas": "blue"
+    }
+   },
+   "tfs": {
+    "promote": {
+     "Fir": "blue",
+     "Cmp": "blue",
+     "Tea": "green",
+     "OtB": "blue"
+    },
+    "add": {
+     "Pas": "blue"
+    }
+   },
+   "tfa": {
+    "promote": {
+     "Fir": "blue",
+     "Cmp": "green",
+     "Tea": "blue",
+     "OtB": "green"
+    },
+    "add": {
+     "Pas": "blue"
+    }
+   },
+   "trea": {
+    "promote": {
+     "Fir": "green",
+     "Pas": "green",
+     "Cmp": "green",
+     "OtB": "green"
+    },
+    "add": {
+     "Tea": "blue"
+    }
+   },
+   "wtfs": {
+    "promote": {
+     "Fir": "blue",
+     "Tea": "green",
+     "OtB": "blue"
+    },
+    "add": {
+     "Pas": "blue",
+     "Cmp": "blue"
+    }
+   },
+   "wtfa": {
+    "promote": {
+     "Fir": "blue",
+     "Tea": "blue",
+     "OtB": "green"
+    },
+    "add": {
+     "Pas": "blue",
+     "Cmp": "blue"
+    }
+   }
+  }
+ },
+ "low_block": {
+  "name": "Low Block Counter",
+  "description": "Defenders and midfielders are judged on Positioning, Concentration, Marking, Tackling and Anticipation; attackers on Pace, Acceleration and Off the Ball for fast transitions. Use for deep, compact, counter-attacking systems.",
+  "changes": {
+   "gkd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Aer": "green"
+    }
+   },
+   "skd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Aer": "blue"
+    }
+   },
+   "sks": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Aer": "blue"
+    }
+   },
+   "ska": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Aer": "blue"
+    }
+   },
+   "bpdd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "bpds": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "bpdc": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "green",
+     "Str": "blue"
+    }
+   },
+   "cdd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "cds": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "cdc": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "green",
+     "Str": "blue"
+    }
+   },
+   "ncbd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "ncbs": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "ncbc": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "green",
+     "Str": "blue"
+    }
+   },
+   "ld": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "ls": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "wcbd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "wcbs": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "wcba": {
+    "promote": {
+     "Pos": "blue",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "fbd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "green"
+    },
+    "add": {
+     "Str": "blue"
+    }
+   },
+   "fbs": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "green"
+    },
+    "add": {
+     "Str": "blue"
+    }
+   },
+   "fba": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "green"
+    },
+    "add": {
+     "Str": "blue"
+    }
+   },
+   "nfbd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "green",
+     "Str": "green"
+    }
+   },
+   "ifbd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "wbd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "green"
+    },
+    "add": {
+     "Str": "blue"
+    }
+   },
+   "wbs": {
+    "promote": {
+     "Pos": "blue",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "blue"
+    },
+    "add": {
+     "Str": "blue"
+    }
+   },
+   "wba": {
+    "promote": {
+     "Pos": "blue",
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "blue"
+    },
+    "add": {
+     "Str": "blue"
+    }
+   },
+   "cwbs": {
+    "promote": {
+     "Pos": "blue",
+     "Mar": "blue",
+     "Tck": "blue",
+     "Ant": "blue"
+    },
+    "add": {
+     "Cnt": "blue",
+     "Str": "blue"
+    }
+   },
+   "cwba": {
+    "promote": {
+     "Pos": "blue",
+     "Mar": "blue",
+     "Tck": "blue",
+     "Ant": "blue"
+    },
+    "add": {
+     "Cnt": "blue",
+     "Str": "blue"
+    }
+   },
+   "iwbd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "green"
+    },
+    "add": {
+     "Str": "blue"
+    }
+   },
+   "iwbs": {
+    "promote": {
+     "Pos": "blue",
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "blue"
+    },
+    "add": {
+     "Str": "blue"
+    }
+   },
+   "iwba": {
+    "promote": {
+     "Pos": "blue",
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "blue"
+    },
+    "add": {
+     "Str": "blue"
+    }
+   },
+   "ad": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "green",
+     "Str": "blue"
+    }
+   },
+   "hbd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "green",
+     "Str": "blue"
+    }
+   },
+   "dmd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "green",
+     "Str": "blue"
+    }
+   },
+   "dms": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "green",
+     "Str": "blue"
+    }
+   },
+   "bwmd": {
+    "promote": {
+     "Pos": "blue",
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "green",
+     "Str": "blue"
+    }
+   },
+   "bwms": {
+    "promote": {
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "green",
+     "Str": "blue"
+    },
+    "add": {
+     "Pos": "blue"
+    }
+   },
+   "cmd": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "green",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "blue"
+    },
+    "add": {
+     "Str": "blue"
+    }
+   },
+   "cms": {
+    "promote": {
+     "Cnt": "blue",
+     "Tck": "green",
+     "Ant": "blue"
+    },
+    "add": {
+     "Pos": "blue",
+     "Mar": "blue",
+     "Str": "blue"
+    }
+   },
+   "cma": {
+    "promote": {
+     "Tck": "blue",
+     "Ant": "blue"
+    },
+    "add": {
+     "Pos": "blue",
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Str": "blue"
+    }
+   },
+   "b2bs": {
+    "promote": {
+     "Pos": "blue",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "blue"
+    },
+    "add": {
+     "Cnt": "blue",
+     "Mar": "blue"
+    }
+   },
+   "cars": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Tck": "green",
+     "Ant": "blue"
+    },
+    "add": {
+     "Mar": "blue",
+     "Str": "blue"
+    }
+   },
+   "dlpd": {
+    "promote": {
+     "Pos": "blue",
+     "Tck": "blue",
+     "Ant": "blue"
+    },
+    "add": {
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Str": "blue"
+    }
+   },
+   "dlps": {
+    "promote": {
+     "Pos": "blue",
+     "Ant": "blue"
+    },
+    "add": {
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Tck": "blue",
+     "Str": "blue"
+    }
+   },
+   "regs": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "Pos": "blue",
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Tck": "blue",
+     "Str": "blue"
+    }
+   },
+   "rps": {
+    "promote": {
+     "Pos": "blue",
+     "Cnt": "blue",
+     "Ant": "green"
+    },
+    "add": {
+     "Mar": "blue",
+     "Tck": "blue",
+     "Str": "blue"
+    }
+   },
+   "svs": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "green",
+     "Tck": "green",
+     "Ant": "blue",
+     "Str": "blue"
+    }
+   },
+   "sva": {
+    "promote": {
+     "Pos": "green",
+     "Cnt": "blue",
+     "Mar": "blue",
+     "Tck": "green",
+     "Ant": "green"
+    },
+    "add": {
+     "Str": "blue"
+    }
+   },
+   "aps": {
+    "promote": {
+     "Ant": "blue",
+     "OtB": "green"
+    }
+   },
+   "apa": {
+    "promote": {
+     "Ant": "blue",
+     "OtB": "green"
+    }
+   },
+   "ams": {
+    "promote": {
+     "Ant": "green",
+     "OtB": "green"
+    }
+   },
+   "ama": {
+    "promote": {
+     "Ant": "green",
+     "OtB": "green"
+    }
+   },
+   "engs": {
+    "promote": {
+     "Ant": "blue",
+     "OtB": "blue"
+    }
+   },
+   "ssa": {
+    "promote": {
+     "Ant": "green",
+     "OtB": "green"
+    }
+   },
+   "ifs": {
+    "promote": {
+     "Ant": "blue",
+     "OtB": "green"
+    }
+   },
+   "ifa": {
+    "promote": {
+     "Ant": "green",
+     "OtB": "green"
+    }
+   },
+   "iws": {
+    "promote": {
+     "OtB": "blue"
+    },
+    "add": {
+     "Ant": "blue"
+    }
+   },
+   "iwa": {
+    "promote": {
+     "Ant": "blue",
+     "OtB": "blue"
+    }
+   },
+   "ws": {
+    "promote": {
+     "OtB": "blue"
+    },
+    "add": {
+     "Ant": "blue"
+    }
+   },
+   "wa": {
+    "promote": {
+     "Ant": "blue",
+     "OtB": "blue"
+    }
+   },
+   "wps": {
+    "promote": {
+     "OtB": "blue"
+    },
+    "add": {
+     "Ant": "blue"
+    }
+   },
+   "wpa": {
+    "promote": {
+     "Ant": "blue",
+     "OtB": "green"
+    }
+   },
+   "wmd": {
+    "promote": {
+     "Ant": "blue"
+    },
+    "add": {
+     "OtB": "blue"
+    }
+   },
+   "wms": {
+    "promote": {
+     "Ant": "blue",
+     "OtB": "blue"
+    }
+   },
+   "wma": {
+    "promote": {
+     "Ant": "blue",
+     "OtB": "blue"
+    }
+   },
+   "dwd": {
+    "promote": {
+     "Ant": "green",
+     "OtB": "green"
+    }
+   },
+   "dws": {
+    "promote": {
+     "Ant": "blue",
+     "OtB": "green"
+    }
+   },
+   "mezs": {
+    "promote": {
+     "OtB": "green",
+     "Cmp": "blue"
+    },
+    "add": {
+     "Fin": "blue"
+    }
+   },
+   "meza": {
+    "promote": {
+     "Fin": "blue",
+     "OtB": "green",
+     "Cmp": "blue"
+    }
+   },
+   "raua": {
+    "promote": {
+     "Ant": "green",
+     "OtB": "green"
+    }
+   },
+   "afa": {
+    "promote": {
+     "OtB": "green",
+     "Cmp": "green"
+    }
+   },
+   "cfs": {
+    "promote": {
+     "OtB": "green",
+     "Cmp": "green"
+    }
+   },
+   "cfa": {
+    "promote": {
+     "OtB": "green",
+     "Cmp": "green"
+    }
+   },
+   "dlfs": {
+    "promote": {
+     "OtB": "green",
+     "Cmp": "green"
+    }
+   },
+   "dlfa": {
+    "promote": {
+     "OtB": "green",
+     "Cmp": "green"
+    }
+   },
+   "f9s": {
+    "promote": {
+     "OtB": "green",
+     "Cmp": "green"
+    }
+   },
+   "pa": {
+    "promote": {
+     "OtB": "green",
+     "Cmp": "green"
+    }
+   },
+   "pfd": {
+    "promote": {
+     "Cmp": "blue"
+    },
+    "add": {
+     "OtB": "blue"
+    }
+   },
+   "pfs": {
+    "promote": {
+     "OtB": "blue",
+     "Cmp": "blue"
+    }
+   },
+   "pfa": {
+    "promote": {
+     "OtB": "green",
+     "Cmp": "blue"
+    }
+   },
+   "tfs": {
+    "promote": {
+     "OtB": "blue",
+     "Cmp": "blue"
+    }
+   },
+   "tfa": {
+    "promote": {
+     "OtB": "green",
+     "Cmp": "green"
+    }
+   },
+   "trea": {
+    "promote": {
+     "OtB": "green",
+     "Cmp": "green"
+    }
+   },
+   "wtfs": {
+    "promote": {
+     "OtB": "blue"
+    },
+    "add": {
+     "Fin": "blue",
+     "Cmp": "blue"
+    }
+   },
+   "wtfa": {
+    "promote": {
+     "Fin": "blue",
+     "OtB": "green"
+    },
+    "add": {
+     "Cmp": "blue"
+    }
+   }
+  }
+ },
+ "wing_play": {
+  "name": "Wing Play / Direct",
+  "description": "Wide players and full-backs are judged on Crossing, Dribbling and speed; strikers on Heading, Jumping and Strength to attack crosses. Use for direct, wide-overload systems.",
+  "changes": {
+   "bpdd": {
+    "promote": {
+     "Hea": "green",
+     "Pos": "green"
+    }
+   },
+   "bpds": {
+    "promote": {
+     "Hea": "green",
+     "Pos": "green"
+    }
+   },
+   "bpdc": {
+    "promote": {
+     "Hea": "blue",
+     "Pos": "green"
+    }
+   },
+   "cdd": {
+    "promote": {
+     "Hea": "green",
+     "Pos": "green"
+    }
+   },
+   "cds": {
+    "promote": {
+     "Hea": "green",
+     "Pos": "green"
+    }
+   },
+   "cdc": {
+    "promote": {
+     "Hea": "blue",
+     "Pos": "green"
+    }
+   },
+   "ncbd": {
+    "promote": {
+     "Hea": "green",
+     "Pos": "green"
+    }
+   },
+   "ncbs": {
+    "promote": {
+     "Hea": "green",
+     "Pos": "green"
+    }
+   },
+   "ncbc": {
+    "promote": {
+     "Hea": "blue",
+     "Pos": "green"
+    }
+   },
+   "ld": {
+    "promote": {
+     "Hea": "green",
+     "Pos": "green"
+    }
+   },
+   "ls": {
+    "promote": {
+     "Hea": "green",
+     "Pos": "green"
+    }
+   },
+   "wcbd": {
+    "promote": {
+     "Hea": "green",
+     "Pos": "green"
+    }
+   },
+   "wcbs": {
+    "promote": {
+     "Hea": "green",
+     "Pos": "green"
+    }
+   },
+   "wcba": {
+    "promote": {
+     "Hea": "green",
+     "Pos": "blue"
+    }
+   },
+   "fbd": {
+    "promote": {
+     "Cro": "blue"
+    },
+    "add": {
+     "Dri": "blue",
+     "Agi": "blue"
+    }
+   },
+   "fbs": {
+    "promote": {
+     "Cro": "blue",
+     "Dri": "blue"
+    },
+    "add": {
+     "Agi": "blue"
+    }
+   },
+   "fba": {
+    "promote": {
+     "Cro": "green",
+     "Dri": "blue",
+     "Agi": "blue"
+    }
+   },
+   "nfbd": {
+    "add": {
+     "Cro": "blue",
+     "Dri": "blue",
+     "Agi": "blue"
+    }
+   },
+   "ifbd": {
+    "promote": {
+     "Dri": "blue",
+     "Agi": "blue"
+    },
+    "add": {
+     "Cro": "blue"
+    }
+   },
+   "wbd": {
+    "promote": {
+     "Cro": "blue",
+     "Dri": "blue",
+     "Agi": "blue"
+    }
+   },
+   "wbs": {
+    "promote": {
+     "Cro": "green",
+     "Dri": "green",
+     "Agi": "blue"
+    }
+   },
+   "wba": {
+    "promote": {
+     "Cro": "green",
+     "Dri": "green",
+     "Agi": "blue"
+    }
+   },
+   "cwbs": {
+    "promote": {
+     "Cro": "green",
+     "Dri": "green",
+     "Agi": "blue"
+    }
+   },
+   "cwba": {
+    "promote": {
+     "Cro": "green",
+     "Dri": "green",
+     "Agi": "blue"
+    }
+   },
+   "iwbd": {
+    "promote": {
+     "Agi": "blue"
+    },
+    "add": {
+     "Cro": "blue",
+     "Dri": "blue"
+    }
+   },
+   "iwbs": {
+    "promote": {
+     "Agi": "blue"
+    },
+    "add": {
+     "Cro": "blue",
+     "Dri": "blue"
+    }
+   },
+   "iwba": {
+    "promote": {
+     "Cro": "blue",
+     "Dri": "blue",
+     "Agi": "blue"
+    }
+   },
+   "ad": {
+    "add": {
+     "Pas": "blue",
+     "Vis": "blue"
+    }
+   },
+   "hbd": {
+    "promote": {
+     "Pas": "blue"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "dmd": {
+    "promote": {
+     "Pas": "blue"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "dms": {
+    "promote": {
+     "Pas": "blue"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "bwmd": {
+    "add": {
+     "Pas": "blue",
+     "Vis": "blue"
+    }
+   },
+   "bwms": {
+    "promote": {
+     "Pas": "blue"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "cmd": {
+    "promote": {
+     "Pas": "blue"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "cms": {
+    "promote": {
+     "Pas": "green",
+     "Vis": "blue"
+    }
+   },
+   "cma": {
+    "promote": {
+     "Pas": "green",
+     "Vis": "blue"
+    }
+   },
+   "b2bs": {
+    "promote": {
+     "Pas": "green"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "cars": {
+    "promote": {
+     "Pas": "green",
+     "Vis": "blue"
+    }
+   },
+   "dlpd": {
+    "promote": {
+     "Pas": "green",
+     "Vis": "green"
+    }
+   },
+   "dlps": {
+    "promote": {
+     "Pas": "green",
+     "Vis": "green"
+    }
+   },
+   "regs": {
+    "promote": {
+     "Pas": "green",
+     "Vis": "green"
+    }
+   },
+   "rps": {
+    "promote": {
+     "Pas": "green",
+     "Vis": "green"
+    }
+   },
+   "svs": {
+    "promote": {
+     "Pas": "green"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "sva": {
+    "promote": {
+     "Pas": "green"
+    },
+    "add": {
+     "Vis": "blue"
+    }
+   },
+   "aps": {
+    "promote": {
+     "Dri": "blue",
+     "Agi": "blue"
+    },
+    "add": {
+     "Cro": "blue"
+    }
+   },
+   "apa": {
+    "promote": {
+     "Dri": "blue",
+     "Agi": "blue"
+    },
+    "add": {
+     "Cro": "blue"
+    }
+   },
+   "ams": {
+    "promote": {
+     "Dri": "blue",
+     "Agi": "blue"
+    },
+    "add": {
+     "Cro": "blue"
+    }
+   },
+   "ama": {
+    "promote": {
+     "Dri": "green",
+     "Agi": "blue"
+    },
+    "add": {
+     "Cro": "blue"
+    }
+   },
+   "engs": {
+    "promote": {
+     "Dri": "blue",
+     "Agi": "blue"
+    },
+    "add": {
+     "Cro": "blue"
+    }
+   },
+   "ssa": {
+    "promote": {
+     "Dri": "green",
+     "Agi": "blue"
+    },
+    "add": {
+     "Cro": "blue"
+    }
+   },
+   "ifs": {
+    "promote": {
+     "Dri": "green",
+     "Agi": "green"
+    },
+    "add": {
+     "Cro": "blue"
+    }
+   },
+   "ifa": {
+    "promote": {
+     "Dri": "green",
+     "Agi": "green"
+    },
+    "add": {
+     "Cro": "blue"
+    }
+   },
+   "iws": {
+    "promote": {
+     "Cro": "green",
+     "Dri": "green",
+     "Agi": "green"
+    }
+   },
+   "iwa": {
+    "promote": {
+     "Cro": "green",
+     "Dri": "green",
+     "Agi": "green"
+    }
+   },
+   "ws": {
+    "promote": {
+     "Cro": "green",
+     "Dri": "green",
+     "Agi": "green"
+    }
+   },
+   "wa": {
+    "promote": {
+     "Cro": "green",
+     "Dri": "green",
+     "Agi": "green"
+    }
+   },
+   "wps": {
+    "promote": {
+     "Dri": "blue",
+     "Agi": "blue"
+    },
+    "add": {
+     "Cro": "blue"
+    }
+   },
+   "wpa": {
+    "promote": {
+     "Dri": "green",
+     "Agi": "blue"
+    },
+    "add": {
+     "Cro": "blue"
+    }
+   },
+   "wmd": {
+    "promote": {
+     "Cro": "blue"
+    },
+    "add": {
+     "Dri": "blue",
+     "Agi": "blue"
+    }
+   },
+   "wms": {
+    "promote": {
+     "Cro": "blue"
+    },
+    "add": {
+     "Dri": "blue",
+     "Agi": "blue"
+    }
+   },
+   "wma": {
+    "promote": {
+     "Cro": "green"
+    },
+    "add": {
+     "Dri": "blue",
+     "Agi": "blue"
+    }
+   },
+   "dwd": {
+    "promote": {
+     "Cro": "blue",
+     "Dri": "blue"
+    },
+    "add": {
+     "Agi": "blue"
+    }
+   },
+   "dws": {
+    "promote": {
+     "Cro": "green",
+     "Dri": "blue"
+    },
+    "add": {
+     "Agi": "blue"
+    }
+   },
+   "mezs": {
+    "promote": {
+     "Pas": "green",
+     "Vis": "blue"
+    }
+   },
+   "meza": {
+    "promote": {
+     "Pas": "green",
+     "Vis": "green"
+    }
+   },
+   "raua": {
+    "add": {
+     "Cro": "blue",
+     "Dri": "blue",
+     "Agi": "blue"
+    }
+   },
+   "afa": {
+    "promote": {
+     "OtB": "green",
+     "Ant": "blue"
+    },
+    "add": {
+     "Hea": "blue",
+     "Jum": "blue",
+     "Str": "blue"
+    }
+   },
+   "cfs": {
+    "promote": {
+     "Hea": "green",
+     "Jum": "blue",
+     "OtB": "green",
+     "Ant": "green",
+     "Str": "green"
+    }
+   },
+   "cfa": {
+    "promote": {
+     "Hea": "green",
+     "Jum": "blue",
+     "OtB": "green",
+     "Ant": "green",
+     "Str": "green"
+    }
+   },
+   "dlfs": {
+    "promote": {
+     "OtB": "green",
+     "Ant": "blue",
+     "Str": "blue"
+    },
+    "add": {
+     "Hea": "blue",
+     "Jum": "blue"
+    }
+   },
+   "dlfa": {
+    "promote": {
+     "OtB": "green",
+     "Ant": "blue",
+     "Str": "blue"
+    },
+    "add": {
+     "Hea": "blue",
+     "Jum": "blue"
+    }
+   },
+   "f9s": {
+    "promote": {
+     "OtB": "green",
+     "Ant": "blue"
+    },
+    "add": {
+     "Hea": "blue",
+     "Jum": "blue",
+     "Str": "blue"
+    }
+   },
+   "pa": {
+    "promote": {
+     "Hea": "blue",
+     "OtB": "green",
+     "Ant": "green"
+    },
+    "add": {
+     "Jum": "blue",
+     "Str": "blue"
+    }
+   },
+   "pfd": {
+    "promote": {
+     "Ant": "green",
+     "Str": "blue"
+    },
+    "add": {
+     "Hea": "blue",
+     "Jum": "blue",
+     "OtB": "blue"
+    }
+   },
+   "pfs": {
+    "promote": {
+     "OtB": "blue",
+     "Ant": "green",
+     "Str": "blue"
+    },
+    "add": {
+     "Hea": "blue",
+     "Jum": "blue"
+    }
+   },
+   "pfa": {
+    "promote": {
+     "OtB": "green",
+     "Ant": "green",
+     "Str": "blue"
+    },
+    "add": {
+     "Hea": "blue",
+     "Jum": "blue"
+    }
+   },
+   "tfs": {
+    "promote": {
+     "Hea": "green",
+     "Jum": "green",
+     "OtB": "blue",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "tfa": {
+    "promote": {
+     "Hea": "green",
+     "Jum": "green",
+     "OtB": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "trea": {
+    "promote": {
+     "OtB": "green",
+     "Ant": "blue"
+    },
+    "add": {
+     "Hea": "blue",
+     "Jum": "blue",
+     "Str": "blue"
+    }
+   },
+   "wtfs": {
+    "promote": {
+     "Hea": "green",
+     "Jum": "green",
+     "OtB": "blue",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   },
+   "wtfa": {
+    "promote": {
+     "Hea": "green",
+     "Jum": "green",
+     "OtB": "green",
+     "Ant": "blue",
+     "Str": "green"
+    }
+   }
+  }
+ }
+}

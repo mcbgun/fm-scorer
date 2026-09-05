@@ -1,122 +1,55 @@
 {% extends "base.html" %}
-{% block title %}FM24 Scorer - Upgrade Targets{% endblock %}
-{% block nav_squad %}text-warning fw-bold{% endblock %}
-
-{% block head %}
-    <style>
-        .upgrade-positive { color: #198754; font-weight: bold; }
-        .benchmark-table th { white-space: nowrap; }
-        .benchmark-table td { white-space: nowrap; }
-    </style>
-{% endblock %}
-
+{% set nav = "compare" %}
+{% block title %}Transfer targets · FM Planner{% endblock %}
 {% block content %}
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h1>Upgrade Targets</h1>
-            <div>
-                <a href="/squad" class="btn btn-outline-secondary me-2">&larr; New Comparison</a>
-                <a href="/export" class="btn btn-success">Export CSV</a>
-            </div>
+<div class="d-flex flex-wrap align-items-baseline gap-3 mb-2">
+    <h1 class="h3 mb-0">Transfer targets</h1>
+    <span class="text-muted small">Each target is placed in the <em>slot</em> where they beat your current starter by the most, using side-aware familiarity.</span>
+    {% if has_targets %}<a class="btn btn-outline-secondary btn-sm ms-auto" href="/compare.csv">Download CSV</a>{% endif %}
+</div>
+
+{% if not has_targets %}
+<div class="alert alert-info">No transfer-targets export loaded yet. <a href="/upload">Upload one</a> (Scouting → Player Search → Print Screen → Web page with the same attribute view as your squad).</div>
+{% else %}
+<form class="card mb-3" method="post" action="/settings">
+    <input type="hidden" name="next" value="/compare">
+    <div class="card-body py-2 row g-2 align-items-end small">
+        <div class="col-md-2"><label class="form-label mb-0">Min margin over starter</label><input class="form-control form-control-sm" name="min_margin" value="{{ settings.min_margin }}"></div>
+        <div class="col-md-2"><label class="form-label mb-0">Max age</label><input class="form-control form-control-sm" name="max_age" value="{{ settings.max_age }}"></div>
+        <div class="col-md-2"><label class="form-label mb-0">Max value (e.g. 20M)</label><input class="form-control form-control-sm" name="max_value" value="{{ settings.max_value }}"></div>
+        <div class="col-md-2"><label class="form-label mb-0">Positions</label>
+            <select class="form-select form-select-sm" name="position_mode"><option value="can_play" {% if settings.position_mode == 'can_play' %}selected{% endif %}>Can play the slot</option><option value="any" {% if settings.position_mode == 'any' %}selected{% endif %}>Any (ignore position)</option></select></div>
+        <div class="col-md-2"><label class="form-label mb-0">Show top</label><input class="form-control form-control-sm" name="top_n" value="{{ settings.top_n }}"></div>
+        <div class="col-md-2 d-flex gap-2 align-items-center">
+            <div class="form-check mb-0"><input type="hidden" name="exclude_unscouted_present" value="1"><input class="form-check-input" type="checkbox" name="exclude_unscouted" value="1" id="exu" {% if settings.exclude_unscouted %}checked{% endif %}><label class="form-check-label" for="exu">Hide unscouted</label></div>
+            <button class="btn btn-primary btn-sm">Apply</button>
         </div>
+    </div>
+</form>
 
-        {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
+<p class="small text-muted">Showing {{ rows|length }} of {{ total }} upgrades. <strong>Margin</strong> is the target's effective score at that slot minus your starter's; <strong>Worst case</strong> uses the low end of every ranged attribute — a positive worst case is a safe buy.</p>
 
-        <div class="alert alert-info">
-            <strong>Profile:</strong> {{ profile_name }}<br>
-            <small>{{ profile_desc }}</small><br>
-            <strong>Squad players:</strong> {{ num_squad }} &nbsp;|&nbsp;
-            <strong>Transfer targets:</strong> {{ num_targets }} &nbsp;|&nbsp;
-            <strong>Roles evaluated:</strong> {{ num_roles }} &nbsp;|&nbsp;
-            <strong>Upgrades found:</strong> {{ num_upgrades }}<br>
-            <strong>One player per role:</strong> {{ one_player_per_role }} &nbsp;|&nbsp;
-            <strong>Position filter:</strong> {{ position_mode }}
-        </div>
-
-        {% if is_formation_mode and best_11 %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Best 11 (current squad, formation assignment)</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-sm benchmark-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Pos</th>
-                            <th>Role</th>
-                            <th>Player</th>
-                            <th>Score</th>
-                            <th>Plays Position</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for slot in best_11 %}
-                        <tr>
-                            <td>{{ loop.index }}</td>
-                            <td><strong>{{ slot.pos }}</strong></td>
-                            <td>{{ slot.role_name }} <code>({{ slot.role_id }})</code></td>
-                            <td>{{ slot.player_name }}</td>
-                            <td>{{ slot.score }}</td>
-                            <td>{{ slot.position }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <h5>Ranked Upgrade Targets</h5>
-        <p class="text-muted">Each target is matched to the formation slot where they provide the largest upgrade over the current Best 11 player.</p>
-        {% else %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Squad Benchmarks (current best per role)</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-sm benchmark-table">
-                    <thead>
-                        <tr>
-                            <th>Role</th>
-                            <th>Squad Best Score</th>
-                            <th>Squad Best Player</th>
-                            <th>2nd Best Score</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in benchmark_rows %}
-                        <tr>
-                            <td>{{ row.role_name }} <code>({{ row.role_id }})</code></td>
-                            <td>{{ row.best_score }}</td>
-                            <td>{{ row.best_player }}</td>
-                            <td>{{ row.second_score }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <h5>Ranked Upgrade Targets</h5>
-        <p class="text-muted">Sorted by upgrade margin (largest improvement first). Green margin = clear upgrade.</p>
-        {% endif %}
-
-        <div class="table-responsive">
-            {{ table_html | safe }}
-        </div>
-{% endblock %}
-
-{% block scripts %}
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <script>
-    $(document).ready(function() {
-        $('#results').DataTable({
-            pageLength: 25,
-            order: [],
-            scrollX: true,
-        });
-    });
-    </script>
+<table class="table table-sm table-striped js-datatable w-100" data-order-col="8" data-page-length="25">
+    <thead><tr><th></th><th>Name</th><th>Age</th><th>Club</th><th>Position</th><th>Slot</th><th>Role</th><th>Score</th><th>Margin</th><th>Worst case</th><th>Replaces</th><th>Value</th><th>Wage</th><th>Scouted</th><th>Personality</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+    <tr>
+        <td class="text-nowrap">
+            <form method="post" action="/shortlist/{{ 'remove' if r.shortlisted else 'add' }}" class="d-inline"><input type="hidden" name="name" value="{{ r.Name }}"><input type="hidden" name="source" value="target"><input type="hidden" name="next" value="/compare"><button class="btn btn-sm py-0 btn-{{ 'warning' if r.shortlisted else 'outline-secondary' }}" title="{{ 'Unpin' if r.shortlisted else 'Pin to shortlist' }}">★</button></form>
+        </td>
+        <td><a data-player-source="targets" data-player-idx="{{ r._idx }}" data-player-name="{{ r.Name }}" href="/player/targets/{{ r._idx }}">{{ r.Name }}</a></td>
+        <td>{{ r.Age }}</td><td>{{ r.Club }}</td><td>{{ r.Position }}</td>
+        <td><strong>{{ r["Upgrade Position"] }}</strong>{% if r.Familiarity and r.Familiarity < 1 %} <span class="text-muted" title="familiarity">×{{ r.Familiarity }}</span>{% endif %}</td>
+        <td>{{ r["Upgrade Role"] }}</td>
+        <td>{{ r["Target Best Score"] }}{% if r["Score Low"] != r["Score High"] %} <span class="score-band">({{ r["Score Low"] }}–{{ r["Score High"] }})</span>{% endif %}</td>
+        <td class="text-success fw-bold">+{{ r["Upgrade Margin"] }}</td>
+        <td class="{{ 'text-success' if r['Margin Low'] and r['Margin Low'] > 0 else 'text-muted' }}">{{ "%+.1f"|format(r["Margin Low"]) if r["Margin Low"] is not none else "" }}</td>
+        <td>{{ r["Squad Best Player"] }}</td><td>{{ r["Transfer Value"] }}</td><td>{{ r.Wage }}</td>
+        <td>{% if r["Needs Scouting"] %}<span class="badge badge-scout">{{ r["Scouting %"]|int }}%</span>{% else %}<span class="text-success">full</span>{% endif %}</td>
+        <td>{{ r.Personality }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% set nav = "upload" %}
+{% block title %}Uploads · FM Planner{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-7">
+        <h1 class="h3 mb-1">{% if hdr.has_squad %}Update your data{% else %}Get started{% endif %}</h1>
+        <p class="text-muted">Export views from FM24 as HTML and drop them below. Only the <strong>squad</strong> file is required; targets and the registration view unlock the transfer and registration pages.</p>
+        {% if notice %}<div class="alert alert-warning py-2">{{ notice }}</div>{% endif %}
+
+        {% if reports %}
+        {% for r in reports %}
+        <div class="card mb-3 border-{{ 'danger' if r.error else 'success' }}">
+            <div class="card-header py-2 d-flex justify-content-between">
+                <span><strong>{{ r.kind|capitalize }}</strong> · {{ r.filename }}</span>
+                <span class="badge bg-{{ 'danger' if r.error else 'success' }}">{{ 'Failed' if r.error else 'Loaded' }}</span>
+            </div>
+            <div class="card-body py-2 small">
+                {% if r.error %}<div class="text-danger">{{ r.error }}</div>
+                {% else %}
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div><strong>{{ r.summary.rows }}</strong> rows · {{ r.summary.columns }} columns</div>
+                        {% if r.summary.club %}<div>Club: <strong>{{ r.summary.club }}</strong>{% if r.summary.clubs > 1 %} (+{{ r.summary.clubs - 1 }} others){% endif %}</div>{% endif %}
+                        {% if r.season %}<div>Season detected: <strong>{{ r.season.label }}</strong> <span class="text-muted">(from {{ r.season.players_used }} DoB/Age pairs)</span></div>{% endif %}
+                        {% if r.summary.statuses %}<div>Statuses found: {{ r.summary.statuses|join(", ") }}</div>{% endif %}
+                        {% if r.summary.duplicate_names %}<div>{{ r.summary.duplicate_names }} duplicate names (shown separately)</div>{% endif %}
+                    </div>
+                    <div class="col-sm-6">
+                        {% if r.summary.fully_scouted is defined %}
+                        <div>Fully scouted: <strong>{{ r.summary.fully_scouted }}</strong> · ranged attributes: {{ r.summary.partially_scouted }}</div>
+                        {% endif %}
+                        {% if r.summary.optional_present %}<div class="text-success">Extra columns used: {{ r.summary.optional_present|join(", ") }}</div>{% endif %}
+                        {% if r.summary.optional_missing %}<div class="text-muted">Not exported: {{ r.summary.optional_missing|join(", ") }}</div>{% endif %}
+                    </div>
+                </div>
+                {% for w in r.warnings %}<div class="text-warning mt-1">⚠ {{ w }}</div>{% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% if go_dashboard %}<a class="btn btn-success btn-lg mb-4" href="/">Open the dashboard →</a>{% endif %}
+        {% endif %}
+
+        <form method="post" action="/upload" enctype="multipart/form-data" data-upload-progress>
+            <div class="row g-3">
+                {% for kind, label, req, help in [
+                    ("squad", "Squad", true, "Squad screen → a custom view with all attributes → right-click list → Print Screen → Web page. Needs Name, Age, Position and every attribute."),
+                    ("targets", "Transfer targets", false, "Scouting → Player Search (or a shortlist) → same attribute view → Print Screen → Web page. Ranges like 12-16 are kept as uncertainty."),
+                    ("registration", "Registration view", false, "Squad → Registration tab → Print Screen → Web page. Provides the Inf status icons (Wnt, Inj, U21...). HGN status comes from the squad export.")] %}
+                <div class="col-md-4">
+                    <div class="dropzone h-100">
+                        <label class="form-label fw-bold mb-1">{{ label }}{% if req %} <span class="text-danger">*</span>{% endif %}</label>
+                        <input class="form-control form-control-sm" type="file" name="{{ kind }}_file" accept=".html,.htm">
+                        <div class="dropzone-file mt-1"></div>
+                        <div class="form-text small">{{ help }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="row g-3 mt-1 align-items-end">
+                <div class="col-md-3"><label class="form-label small mb-0">Formation</label>
+                    <select class="form-select form-select-sm" name="formation_id">{% for fid, f in formations.items() %}<option value="{{ fid }}" {% if fid == hdr.formation.id %}selected{% endif %}>{{ f.name }}</option>{% endfor %}</select></div>
+                <div class="col-md-3"><label class="form-label small mb-0">Playing style</label>
+                    <select class="form-select form-select-sm" name="profile_id">{% for pid, p in profiles.items() %}<option value="{{ pid }}" {% if pid == hdr.profile.id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
+                <div class="col-md-2"><label class="form-label small mb-0">Transfer budget £M</label>
+                    <input class="form-control form-control-sm" name="transfer_budget" value="{{ hdr.transfer_budget if hdr.transfer_budget is not none else '' }}" placeholder="from Finances"></div>
+                <div class="col-md-2"><label class="form-label small mb-0">Spare wages £K p/w</label>
+                    <input class="form-control form-control-sm" name="wage_budget" value="{{ hdr.wage_budget if hdr.wage_budget is not none else '' }}" placeholder="remaining"></div>
+                <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Upload & analyse</button></div>
+            </div>
+            <div id="uploadProgress" class="d-none mt-3" role="status" aria-live="polite">
+                <div class="progress" aria-label="Upload progress">
+                    <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">0%</div>
+                </div>
+                <div id="uploadProgressText" class="form-text">Uploading files…</div>
+            </div>
+            <p class="form-text mt-2">Budgets are optional but without them the strategy can only be funded by sales — it will say so rather than guessing.</p>
+        </form>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-header py-2"><strong>Workspace: {{ hdr.workspace.name }}</strong></div>
+            <div class="card-body small">
+                <p class="mb-2">Each workspace is one save game. Uploads are kept as snapshots so season-on-season growth is tracked under <a href="/history">History</a>.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <form method="post" action="/workspace/new" class="d-flex gap-1"><input class="form-control form-control-sm" name="name" placeholder="New workspace name" required><button class="btn btn-outline-primary btn-sm">Create</button></form>
+                    <form method="post" action="/workspace/rename" class="d-flex gap-1"><input class="form-control form-control-sm" name="name" value="{{ hdr.workspace.name }}"><button class="btn btn-outline-secondary btn-sm">Rename</button></form>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <a class="btn btn-outline-secondary btn-sm" href="/workspace/export">Export workspace</a>
+                    <form method="post" action="/workspace/import" enctype="multipart/form-data" class="d-flex gap-1"><input type="file" class="form-control form-control-sm" name="file" accept=".json" required><button class="btn btn-outline-secondary btn-sm">Import</button></form>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <form method="post" action="/workspace/reset" onsubmit="return confirm('Clear all uploads in this workspace?')"><button class="btn btn-outline-warning btn-sm">Clear uploads</button></form>
+                    {% if hdr.workspaces|length > 1 %}
+                    <form method="post" action="/workspace/delete" onsubmit="return confirm('Delete this workspace and all its snapshots?')"><input type="hidden" name="workspace_id" value="{{ hdr.workspace.id }}"><button class="btn btn-outline-danger btn-sm">Delete workspace</button></form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if snapshots %}
+        <div class="card mb-3">
+            <div class="card-header py-2"><strong>Snapshots</strong></div>
+            <table class="table table-sm small mb-0">
+                <thead><tr><th>Kind</th><th>File</th><th>Rows</th><th>Season</th><th>Uploaded</th><th></th></tr></thead>
+                <tbody>{% for s in snapshots %}
+                <tr><td>{{ s.kind }}</td><td class="text-truncate" style="max-width:160px" title="{{ s.filename }}">{{ s.filename }}</td><td>{{ s.n_rows }}</td><td>{{ s.season_label }}</td><td>{{ s.created_at[:16] }}</td>
+                    <td><form method="post" action="/snapshots/delete" class="d-inline"><input type="hidden" name="snapshot_id" value="{{ s.id }}"><button class="btn btn-link btn-sm p-0 text-danger">remove</button></form></td></tr>
+                {% endfor %}</tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header py-2"><strong>What the app does</strong></div>
+            <div class="card-body small">
+                <ol class="mb-2 ps-3">
+                    <li>Scores every player for every role in your formation (key ×5, preferred ×3, useful ×1), weighted by how natural the slot is for them.</li>
+                    <li>Picks the best XI with an optimal assignment (no greedy blocking), then finds weak slots and thin cover.</li>
+                    <li>Ranks transfer targets by upgrade margin <em>per slot</em>, showing score ranges for partially-scouted players.</li>
+                    <li>Builds a value-for-money transfer plan within your budget, with plain-English reasons, and lets you compare Plan A vs Plan B.</li>
+                </ol>
+                <div class="text-muted">Required attribute columns: {{ required_attrs|join(", ") }}.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

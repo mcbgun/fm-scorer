@@ -1,0 +1,19 @@
+{# expects: lineup (list of dicts with x, y, pos, role_name, player_name, player_idx, score, depth_status, needs_scouting), weak_idx (set/list of slot_idx) #}
+<div class="pitch {{ pitch_class or '' }}">
+    <div class="box top"></div><div class="box bottom"></div>
+    {% for s in lineup %}
+    <div class="slot" style="left:{{ s.x }}%; top:{{ s.y }}%;">
+        {% if s.player_idx is defined and s.player_idx >= 0 %}
+        <a data-player-source="squad" data-player-idx="{{ s.player_idx }}" data-player-name="{{ s.player_name }}" href="/player/squad/{{ s.player_idx }}" class="text-decoration-none">
+            <span class="chip {% if s.slot_idx in weak_idx %}weak{% endif %} {% if s.depth_status != 'ok' %}thin{% endif %}" title="{{ s.pos }} · {{ s.role_name }} · depth: {{ s.depth_status }}">{{ "%.1f"|format(s.score) }}{% if s.needs_scouting %}?{% endif %}</span>
+            <span class="name">{{ s.player_name }}</span>
+            <span class="role">{{ s.pos }} · {{ s.role_name }}</span>
+        </a>
+        {% else %}
+        <span class="chip empty" title="No compatible player">—</span>
+        <span class="name">Unfilled</span>
+        <span class="role">{{ s.pos }} · {{ s.role_name }}</span>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>

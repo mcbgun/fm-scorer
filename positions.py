@@ -12,7 +12,6 @@ sharing the same side designation in parentheses.
 
 import re
 
-
 # Role -> (set of position types, set of acceptable sides)
 # A player matches if they have any position_type in the set AND the sides overlap
 ROLE_POSITION_MAP: dict[str, tuple[set[str], set[str]]] = {
@@ -144,38 +143,177 @@ def parse_position_string(pos_str: str) -> list[tuple[str, str]]:
     return results
 
 
+def _side_letters(sides: str) -> set[str]:
+    return {c for c in str(sides).upper() if c in "LCR"}
+
+
+def role_side_letters(role_id: str) -> set[str]:
+    """Union of side letters a role accepts ('' means side-less, e.g. GK/DM)."""
+    if role_id not in ROLE_POSITION_MAP:
+        return set()
+    _, req_sides = ROLE_POSITION_MAP[role_id]
+    letters: set[str] = set()
+    for s in req_sides:
+        letters |= _side_letters(s)
+    return letters
+
+
+def role_position_types(role_id: str) -> set[str]:
+    if role_id not in ROLE_POSITION_MAP:
+        return set()
+    return set(ROLE_POSITION_MAP[role_id][0])
+
+
 def player_can_play_role(position_str: str, role_id: str) -> bool:
-    """Check if a player's position string indicates they can play a role.
+    """Check if a player's position string indicates they can play a role
+    anywhere on the pitch (ignoring which side the formation slot is on).
+    """
+    return position_familiarity(position_str, role_id, None) > 0.0
 
-    Args:
-        position_str: FM24 Position column value
-        role_id: Role ID like "cdd", "wba", "afa"
 
-    Returns:
-        True if the player can play the role's position
+_SLOT_RE = re.compile(r"^(GK|WB|DM|AM|ST|D|M)\s*([LCR]*)$")
+
+# Custom groupings the user may type as slot labels.
+_SLOT_ALIASES = {
+    "SW": ("D", "C"),
+    "CB": ("D", "C"),
+    "CD": ("D", "C"),
+    "CM": ("M", "C"),
+    "CAM": ("AM", "C"),
+    "CDM": ("DM", "C"),
+    "LB": ("D", "L"),
+    "RB": ("D", "R"),
+    "LWB": ("WB", "L"),
+    "RWB": ("WB", "R"),
+    "LM": ("M", "L"),
+    "RM": ("M", "R"),
+    "LW": ("AM", "L"),
+    "RW": ("AM", "R"),
+    "CF": ("ST", "C"),
+    "FW": ("ST", "C"),
+}
+
+
+def parse_slot_position(slot_pos: str) -> tuple[str | None, str]:
+    """Parse a formation slot label like ``AML`` or ``DCR`` into (type, side).
+
+    Returns (None, "") for unrecognised labels. Side letters are normalised to
+    a single letter: L, C, R or "" (unspecified). ``DC``/``DCR``/``DCL`` all
+    resolve to a central slot because the R/L suffix on a central slot only
+    distinguishes the two centre-backs, not a wide position.
+    """
+    s = str(slot_pos or "").strip().upper().replace(" ", "").replace("(", "").replace(")", "")
+    if not s:
+        return None, ""
+    if s in _SLOT_ALIASES:
+        return _SLOT_ALIASES[s]
+    m = _SLOT_RE.match(s)
+    if not m:
+        return None, ""
+    ptype, letters = m.group(1), m.group(2)
+    if ptype == "GK":
+        return "GK", ""
+    if "C" in letters:
+        return ptype, "C"
+    if "L" in letters and "R" not in letters:
+        return ptype, "L"
+    if "R" in letters and "L" not in letters:
+        return ptype, "R"
+    if ptype == "DM":
+        return "DM", "C" if not letters else ""
+    return ptype, ""
+
+
+# Position types a player may cover for a role slot type when their exported
+# position list is close but not exact (e.g. a D (R) covering a WB slot).
+_ADJACENT_TYPES: dict[str, dict[str, float]] = {
+    "WB": {"D": 0.92, "M": 0.85},
+    "D": {"WB": 0.90},
+    "DM": {"M": 0.90, "D": 0.85},
+    "M": {"DM": 0.90, "AM": 0.88},
+    "AM": {"M": 0.90, "ST": 0.85},
+    "ST": {"AM": 0.85},
+}
+
+
+# Familiarity multiplier for a winger/full-back asked to play the opposite flank.
+# Set to 0.0 (strict) to require the exact side.
+WRONG_FLANK_FAMILIARITY = 0.8
+
+
+def position_familiarity(
+    position_str: str, role_id: str, slot_pos: str | None, wrong_flank: float = WRONG_FLANK_FAMILIARITY
+) -> float:
+    """Return how well a player's exported positions fit a role in a slot.
+
+    FM's Position column lists the positions a player is Natural or
+    Accomplished in, so an exact type+side match is treated as full
+    familiarity (1.0). Adjacent position types (a D (R) covering a WB (R)
+    slot) are partially familiar. Anything else is 0.0 = cannot play.
+
+    When ``slot_pos`` is None the side of the slot is unknown and any side the
+    role accepts is fine (legacy behaviour used for role-only filtering).
     """
     if role_id not in ROLE_POSITION_MAP:
-        return True  # Unknown role: don't filter
+        return 1.0
 
     req_types, req_sides = ROLE_POSITION_MAP[role_id]
-    player_positions = parse_position_string(position_str)
+    side_less = req_sides == {""}
+    role_sides = role_side_letters(role_id)
 
-    for ptype, psides in player_positions:
-        if ptype not in req_types:
+    slot_type, slot_side = (None, "")
+    if slot_pos:
+        slot_type, slot_side = parse_slot_position(slot_pos)
+
+    # Required side letter for this slot. A wide role in a slot whose side is
+    # unknown accepts any of the role's sides.
+    if slot_side and slot_side in role_sides:
+        need_side = slot_side
+    elif slot_side == "C" and side_less:
+        need_side = ""
+    elif slot_side and not side_less and slot_side not in role_sides:
+        # e.g. wide role placed in a central slot: use the slot side anyway so
+        # the user gets what they configured.
+        need_side = slot_side
+    else:
+        need_side = None
+
+    best = 0.0
+    for ptype, psides in parse_position_string(position_str):
+        pletters = _side_letters(psides)
+        type_factor = 0.0
+        if ptype in req_types:
+            type_factor = 1.0
+        elif slot_type and ptype in _ADJACENT_TYPES.get(slot_type, {}) and slot_type in req_types:
+            type_factor = _ADJACENT_TYPES[slot_type][ptype]
+        elif not slot_type:
+            for rt in req_types:
+                type_factor = max(type_factor, _ADJACENT_TYPES.get(rt, {}).get(ptype, 0.0))
+        if type_factor == 0.0:
             continue
-        # Check side overlap
-        if req_sides == {""}:
-            # Role has no side requirement (GK, DM) — player just needs the type
-            return True
-        if psides == "":
-            # Player has the type but no sides specified — shouldn't happen for non-GK/DM
+
+        if side_less and ptype in ("GK", "DM"):
+            best = max(best, type_factor)
             continue
-        # Check if any required side letter is in the player's sides
-        # e.g. req_sides={"C","LC","RC","RLC"}, player sides="LC" -> "C" in "LC" and "L" in "LC"
-        # Simple approach: check if any character of req side appears in player sides
-        for req_side in req_sides:
-            # A side like "C" matches if "C" is in the player's side string
-            # A side like "LC" matches if both "L" and "C" are in the player's side string
-            if all(c in psides for c in req_side):
-                return True
-    return False
+        if side_less:
+            # Side-less role (DM) but player type is M/D with sides: need central
+            if "C" in pletters or not pletters:
+                best = max(best, type_factor)
+            continue
+        if not pletters:
+            continue
+        if need_side is None:
+            if pletters & role_sides:
+                best = max(best, type_factor)
+        elif need_side == "":
+            best = max(best, type_factor)
+        elif need_side in pletters:
+            best = max(best, type_factor)
+        elif need_side in ("L", "R") and ("L" in pletters or "R" in pletters):
+            # Plays the other flank: can swap wings at a familiarity cost.
+            best = max(best, type_factor * wrong_flank)
+    return round(best, 3)
+
+
+def player_can_play_slot(position_str: str, slot_pos: str, role_id: str, wrong_flank: float = WRONG_FLANK_FAMILIARITY) -> bool:
+    return position_familiarity(position_str, role_id, slot_pos, wrong_flank) > 0.0
