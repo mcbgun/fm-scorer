@@ -7,9 +7,7 @@ from typing import Any
 import pandas as pd
 
 from money import parse_value_low, parse_value_range, parse_wage
-
-LOAN_FARM_MAX_COST_M = 0.25
-LOAN_FARM_MAX_WAGE_K = 2.0
+from scorer import filter_formation_upgrades
 
 
 def _number(value: Any) -> float:
@@ -29,18 +27,26 @@ def _loan_farm_targets(ctx) -> list[dict]:
     df = ctx.targets
     if df is None or df.empty or "Age" not in df.columns:
         return []
-    max_cost = LOAN_FARM_MAX_COST_M
-    max_wage = LOAN_FARM_MAX_WAGE_K
+    analysis = ctx.analysis
+    scored = filter_formation_upgrades(
+        df,
+        analysis.squad_df,
+        analysis.formation,
+        ctx.profile,
+        min_margin=-999,
+        max_age=99,
+        assumption=ctx.assumption,
+        exclude_unscouted=False,
+        benchmarks=analysis.best_11,
+    )
     rows = []
-    for idx, row in df.iterrows():
+    for idx, row in scored.iterrows():
         age = _number(row.get("Age"))
-        potential = _number(row.get("Potential"))
+        role_score = _number(row.get("Target Best Score"))
         if age <= 0 or age > 28:
             continue
         cost = parse_value_low(row.get("Asking Price", "")) or parse_value_low(row.get("Transfer Value", ""))
         wage = parse_wage(str(row.get("Wage", "")))
-        if cost > max_cost or wage > max_wage:
-            continue
         value_lo, value_hi = parse_value_range(row.get("Transfer Value", ""))
         is_free_agent = "free" in str(row.get("Club", "")).lower() or str(row.get("Transfer Value", "")).strip().lower() in {"free", "free agent"}
         if cost == 0 and not is_free_agent:
@@ -52,23 +58,29 @@ def _loan_farm_targets(ctx) -> list[dict]:
         net_month = wage_income + fee_per_month - wage
         season_cash = net_month * 10
         resale_margin = max(0.0, value_hi - cost)
+        position_count = len(str(row.get("Position", "")).replace("/", ",").split(","))
+        age_fit = max(0.0, 1.0 - max(0, age - 23) * 0.12)
+        quality_fit = max(0.0, 1.0 - abs(role_score - 12) / 10)
+        wage_fit = 1 / (1 + wage / 2)
+        versatility_fit = min(1.0, 0.75 + position_count * 0.1)
+        loanability = age_fit * quality_fit * wage_fit * versatility_fit
+        capital_efficiency = 1 / (1 + cost * 8) if cost else 1.0
+        cashflow_efficiency = min(1.0, max(0.0, net_month) / max(cost * 10, 0.25)) if cost else 0.0
+        score = 45 * loanability + 45 * capital_efficiency + 10 * cashflow_efficiency
+        if score < 45:
+            continue
         if is_free_agent and value_lo == 0:
             lane = "Free-agent test"
-            score = max(0, potential) * 0.2 - wage
         elif net_month > 0:
             lane = "Cash-flow asset"
-            score = net_month * 10 + resale_margin * 0.25 + max(0, 24 - age) * 0.02
         else:
             lane = "Development asset"
-            score = resale_margin * 0.25 + max(0, 24 - age) * 0.02
-        if net_month <= 0 and resale_margin <= 0 and not is_free_agent:
-            continue
         rows.append({
             "idx": int(idx),
             "name": str(row.get("Name", "")),
             "age": int(age),
             "position": str(row.get("Position", "")),
-            "potential": round(potential, 1),
+            "role_score": round(role_score, 1),
             "cost": cost,
             "value": value_lo,
             "resale_value": value_hi,
@@ -80,11 +92,13 @@ def _loan_farm_targets(ctx) -> list[dict]:
             "resale_margin": round(resale_margin, 2),
             "lane": lane,
             "cash_flow_known": not is_free_agent or value_lo > 0,
+            "loanability": round(loanability * 100),
+            "pounds_per_point": round(cost * 1000000 / role_score) if role_score else 0,
             "club": str(row.get("Club", "")),
             "score": round(score, 2),
             "needs_scouting": bool(row.get("Needs Scouting", False)),
         })
-    return sorted(rows, key=lambda item: (item["score"], item["net_month"]), reverse=True)[:8]
+    return sorted(rows, key=lambda item: (item["score"], item["net_month"]), reverse=True)[:12]
 
 
 def build_club_plan(ctx) -> dict | None:
@@ -176,7 +190,7 @@ def build_club_plan(ctx) -> dict | None:
         "best_xi": ctx.pitch_lineup(),
         "depth_alerts": [a for a in ctx.dashboard()["depth_alerts"] if a["status"] != "ok"],
         "notes": [
-            "Loan-farm candidates are hard-capped at £250K acquisition cost and £2K p/w wages: this lane is for cheap cash-flow assets, not expensive prospects.",
+            "Loan-farm score rewards role quality per pound, low wages, age/versatility and likely loan demand; it is separate from first-team and wonderkid recruitment.",
             "The fee estimate uses a value-to-weekly-wage heuristic; verify it with an actual offer before counting income.",
             "Potential, playing time and facilities are uncertain, so development recommendations are bands rather than guarantees.",
         ],

@@ -54,11 +54,11 @@
             <div class="card-header py-2 d-flex justify-content-between"><strong>Loan-farm pipeline</strong><a href="/compare" class="small">all targets →</a></div>
             <div class="table-responsive">
                 <table class="table table-sm mb-0 small">
-                    <thead><tr><th>Player</th><th>Age / position</th><th>Route</th><th>Loan maths</th><th>Cost</th></tr></thead>
+                    <thead><tr><th>Player</th><th>Age / position</th><th>Role score</th><th>Loan demand</th><th>Value for money</th></tr></thead>
                     <tbody>
                     {% for item in plan.loan_farm %}
-                    <tr><td><a href="/player/targets/{{ item.idx }}">{{ item.name }}</a><br><span class="text-muted">{{ item.club }}</span></td><td>{{ item.age }} · {{ item.position }}</td><td><span class="badge bg-{{ 'success' if item.lane == 'Cash-flow asset' else 'secondary' }}">{{ item.lane }}</span><br><span class="text-muted">Potential {{ item.potential if item.potential else "?" }}</span></td><td>{% if item.cash_flow_known %}+{{ item.net_month|wage }}/month<br>{{ item.wage_share }}% wages{% else %}Offer test required{% endif %}</td><td>{{ item.cost|millions }}<br><span class="text-muted">~{{ item.resale_margin|millions }} upside</span></td></tr>
-                    {% else %}<tr><td colspan="5" class="text-muted">No cheap cash-flow assets passed the current cost and wage limits. Upload targets with Age, Value and Wage columns to screen them.</td></tr>{% endfor %}
+                    <tr><td><a href="/player/targets/{{ item.idx }}">{{ item.name }}</a><br><span class="text-muted">{{ item.club }}</span></td><td>{{ item.age }} · {{ item.position }}</td><td><strong>{{ item.role_score }}</strong><br><span class="text-muted">£{{ "{:,.0f}".format(item.pounds_per_point) }}/point</span></td><td><span class="badge bg-{{ 'success' if item.loanability >= 60 else 'secondary' }}">{{ item.loanability }}%</span><br>{{ item.wage|wage }}</td><td><span class="badge bg-{{ 'success' if item.lane == 'Cash-flow asset' else 'secondary' }}">{{ item.lane }}</span><br>{{ item.cost|millions }} · +{{ item.net_month|wage }}/mo</td></tr>
+                    {% else %}<tr><td colspan="5" class="text-muted">No targets scored as likely loan-farm acquisitions. Upload a broad scouting export; the score favours many affordable, loanable players over expensive prospects.</td></tr>{% endfor %}
                     </tbody>
                 </table>
             </div>
