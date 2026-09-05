@@ -97,7 +97,7 @@ def test_app_end_to_end(client):
     assert r.status_code == 200
 
     for path, needle in [
-        ("/", "Best XI"), ("/squad", "Depth chart"), ("/compare", "Star Striker"), ("/youth", "Kid"),
+        ("/", "Best XI"), ("/plan", "Finance builder"), ("/squad", "Depth chart"), ("/compare", "Star Striker"), ("/youth", "Kid"),
         ("/sell", "Recommendation"), ("/registration", "Home-grown"), ("/strategy", "Reasoning"),
         ("/player/squad/0", "Score breakdown"), ("/player/targets/1", "Scouting required"),
         ("/shortlist", "Shortlist"), ("/scenarios", "Plan A"), ("/history", "Squad snapshots (1)"),

@@ -22,6 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from markupsafe import Markup
 
+from club_plan import build_club_plan
 from formations import delete_formation, list_formations, save_formation, validate_slots
 from money import fmt_millions, fmt_wage
 from parser import REQUIRED_ATTRS
@@ -150,6 +151,14 @@ async def dashboard(request: Request):
         return render("upload.html", request, ctx, reports=[], required_attrs=REQUIRED_ATTRS, notice=None)
     d = ctx.dashboard()
     return render("dashboard.html", request, ctx, d=d, scenarios=store.scenarios(ctx.wid))
+
+
+@app.get("/plan", response_class=HTMLResponse)
+async def club_plan_page(request: Request):
+    ctx = ctx_for(request)
+    if (r := need_squad(request, ctx)) is not None:
+        return r
+    return render("plan.html", request, ctx, plan=build_club_plan(ctx))
 
 
 # ------------------------------------------------------------------ uploads

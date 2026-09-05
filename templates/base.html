@@ -16,7 +16,7 @@
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"><span class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav me-auto">
-                {% for href, label, key in [("/", "Dashboard", "dashboard"), ("/squad", "Squad", "squad"), ("/compare", "Targets", "comparison"), ("/youth", "Youth", "youth"), ("/sell", "Sell", "sell"), ("/registration", "Registration", "registration"), ("/strategy", "Strategy", "strategy"), ("/scenarios", "Scenarios", "scenarios"), ("/shortlist", "Shortlist", "shortlist"), ("/history", "History", "history"), ("/config", "Tactics", "config"), ("/upload", "Uploads", "upload")] %}
+                {% for href, label, key in [("/plan", "Club Plan", "plan"), ("/", "Dashboard", "dashboard"), ("/squad", "Squad", "squad"), ("/compare", "Targets", "comparison"), ("/youth", "Youth", "youth"), ("/sell", "Sell", "sell"), ("/registration", "Registration", "registration"), ("/strategy", "Strategy", "strategy"), ("/scenarios", "Scenarios", "scenarios"), ("/shortlist", "Shortlist", "shortlist"), ("/history", "History", "history"), ("/config", "Tactics", "config"), ("/upload", "Uploads", "upload")] %}
                 <li class="nav-item"><a class="nav-link {% if nav == key %}active fw-bold{% endif %}" href="{{ href }}">{{ label }}{% if key == 'shortlist' and hdr.shortlist_count %} <span class="badge bg-warning text-dark">{{ hdr.shortlist_count }}</span>{% endif %}</a></li>
                 {% endfor %}
             </ul>

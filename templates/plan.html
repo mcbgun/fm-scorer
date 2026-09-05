@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% set nav = "plan" %}
+{% block title %}Club Plan · {{ hdr.club }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-baseline gap-3 mb-3">
+    <h1 class="h3 mb-0">{{ hdr.club or "Your club" }} <span class="text-muted fs-6">{{ hdr.season }}</span></h1>
+    <span class="text-muted">One plan for finances, recruitment and development.</span>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3"><div class="card h-100"><div class="card-body py-2"><div class="kpi">{{ plan.finance.wage_bill|wage }}</div><div class="kpi-label">Current wage bill</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="card h-100"><div class="card-body py-2"><div class="kpi">{{ plan.finance.sale_value|millions }}</div><div class="kpi-label">Estimated sale value</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="card h-100"><div class="card-body py-2"><div class="kpi">{{ plan.loan_farm|length }}</div><div class="kpi-label">Loan-farm targets</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="card h-100"><div class="card-body py-2"><div class="kpi">{{ plan.youth|length }}</div><div class="kpi-label">Youth decisions</div></div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-header py-2"><strong>Next actions</strong></div>
+            <div class="list-group list-group-flush small">
+                {% for action in plan.next_actions %}
+                <div class="list-group-item py-2">
+                    <span class="badge bg-secondary">{{ action.lane }}</span>
+                    <strong>{{ action.title }}</strong>
+                    <div class="text-muted">{{ action.detail }}</div>
+                </div>
+                {% else %}<div class="list-group-item text-muted">Upload a squad export to build your plan.</div>{% endfor %}
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-header py-2"><strong>Finance builder</strong></div>
+            <div class="card-body small">
+                <div class="d-flex justify-content-between"><span>Transfer budget</span><strong>{{ plan.finance.transfer_budget|millions if plan.finance.transfer_budget is not none else "not set" }}</strong></div>
+                <div class="d-flex justify-content-between"><span>Wage headroom</span><strong>{{ plan.finance.wage_budget|wage if plan.finance.wage_budget is not none else "not set" }}</strong></div>
+                <div class="d-flex justify-content-between"><span>Wages released by sales</span><strong>{{ plan.finance.sale_wages|wage }}</strong></div>
+                <hr class="my-2">
+                <p class="mb-0 text-muted">The planner treats sales and wage savings as funding sources, then feeds the safe budget into first-team recruitment. Loan fees are not counted until you record a real offer.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card mb-3">
+            <div class="card-header py-2 d-flex justify-content-between"><strong>First-team pipeline</strong><a href="/strategy" class="small">detailed strategy →</a></div>
+            <div class="list-group list-group-flush small">
+                {% for item in plan.first_team %}
+                <div class="list-group-item py-2"><span class="badge bg-{{ 'success' if item.type == 'buy' else 'warning text-dark' }}">{{ item.type }}</span> <strong>{{ item.name }}</strong><span class="float-end">{{ item.value|millions }}</span><div class="text-muted">{{ item.reason }}</div></div>
+                {% else %}<div class="list-group-item text-muted">Set budgets and upload transfer targets to generate first-team moves.</div>{% endfor %}
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header py-2 d-flex justify-content-between"><strong>Loan-farm pipeline</strong><a href="/compare" class="small">all targets →</a></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0 small">
+                    <thead><tr><th>Player</th><th>Age / position</th><th>Potential</th><th>Cost</th><th></th></tr></thead>
+                    <tbody>
+                    {% for item in plan.loan_farm %}
+                    <tr><td><a href="/player/targets/{{ item.idx }}">{{ item.name }}</a><br><span class="text-muted">{{ item.club }}</span></td><td>{{ item.age }} · {{ item.position }}</td><td>{{ item.potential if item.potential else "?" }}</td><td>{{ item.value|millions }}<br>{{ item.wage|wage }}</td><td>{% if item.needs_scouting %}<span class="badge badge-scout">Scout</span>{% else %}<span class="badge bg-info text-dark">Review</span>{% endif %}</td></tr>
+                    {% else %}<tr><td colspan="5" class="text-muted">Upload targets with Age, Potential, Value and Wage columns to build this pipeline.</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header py-2 d-flex justify-content-between"><strong>Youth pathway</strong><a href="/youth" class="small">full development view →</a></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0 small">
+                    <thead><tr><th>Player</th><th>Role</th><th>Current → potential</th><th>Decision</th></tr></thead>
+                    <tbody>
+                    {% for item in plan.youth %}
+                    <tr><td><a href="/player/squad/{{ item.idx }}">{{ item.name }}</a><br><span class="text-muted">{{ item.age }}</span></td><td>{{ item.role }}</td><td>{{ "%.1f"|format(item.score) }} → {{ "%.1f"|format(item.potential) }}</td><td><span class="badge bg-{{ 'success' if item.lane == 'First team' else ('warning text-dark' if item.lane == 'Loan farm' else ('danger' if item.lane == 'Sell' else 'secondary')) }}">{{ item.lane }}</span><br><span class="text-muted">{{ item.readiness }}</span></td></tr>
+                    {% else %}<tr><td colspan="4" class="text-muted">No youth records are available.</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="small text-muted mt-3">{% for note in plan.notes %}<div>{{ note }}</div>{% endfor %}</div>
+{% endblock %}
